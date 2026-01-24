@@ -1,0 +1,13 @@
+{
+  "name": "av-cli",
+  "description": "Claude Code plugin for Aviator CLI stacked PR workflows",
+  "version": "1.0.0",
+  "author": {
+    "name": "Aviator",
+    "email": "support@aviator.co"
+  },
+  "homepage": "https://docs.aviator.co/aviator-cli",
+  "repository": "https://github.com/aviator-co/claude-plugins",
+  "license": "MIT",
+  "keywords": ["git", "github", "stacked-prs", "code-review", "aviator"]
+}
