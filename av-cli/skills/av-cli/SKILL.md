@@ -134,13 +134,15 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 
 ### Pull Requests
 
-| Command                 | Purpose                                |
-| ----------------------- | -------------------------------------- |
-| `av pr`                 | Create/update PR for current branch    |
-| `av pr --all`           | Create/update PRs for entire stack     |
-| `av pr --all --current` | Create/update PRs up to current branch |
-| `av pr --draft`         | Create PR as draft                     |
-| `av pr --edit`          | Edit existing PR title/body            |
+| Command                                        | Purpose                                |
+| ---------------------------------------------- | -------------------------------------- |
+| `av pr --title "Title" --body "Description"`   | Create/update PR for current branch    |
+| `av pr --all`                                  | Create/update PRs for entire stack     |
+| `av pr --all --current`                        | Create/update PRs up to current branch |
+| `av pr --draft`                                | Create PR as draft                     |
+| `av pr --edit`                                 | Edit existing PR title/body            |
+
+**Note:** Always pass `--title` and `--body` flags explicitly to avoid interactive prompts.
 
 ### Synchronization
 
@@ -151,6 +153,13 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 | `av sync --all --rebase-to-trunk` | Rebase all stacks onto latest trunk |
 | `av restack`                      | Rebase children locally (no push)   |
 | `av fetch`                        | Fetch latest state from GitHub      |
+
+**Non-interactive mode:** `av sync` prompts for confirmation by default. For automation/scripting, use explicit flags:
+```bash
+av sync --push=yes --prune=no   # Push without prompting, don't prune merged branches
+av sync --push=no               # Skip pushing entirely
+```
+Options for `--push` and `--prune`: `yes`, `no`, or `ask` (default).
 
 ### Navigation
 
@@ -177,17 +186,17 @@ Or abort with `--abort`, or skip the problematic commit with `--skip`.
 
 Once a repo is av-initialized, **use av for everything** - even single PRs. av works great for non-stacked workflows too and keeps things consistent.
 
-| Scenario                       | Command                                     |
-| ------------------------------ | ------------------------------------------- |
-| Create a branch                | `av branch <name>`                          |
-| Commit changes                 | `av commit -m "message"`                    |
-| Create/update a PR             | `av pr`                                     |
-| Create PRs for part of a stack | `av pr --all --current`                     |
-| Create PRs for entire stack    | `av pr --all`                               |
-| Sync after making changes      | `av sync`                                   |
-| After a PR is merged           | `av sync --all` (cleans up merged branches) |
-| Switch branches                | `av switch`                                 |
-| View diff against parent       | `av diff`                                   |
+| Scenario                       | Command                                                   |
+| ------------------------------ | --------------------------------------------------------- |
+| Create a branch                | `av branch <name>`                                        |
+| Commit changes                 | `av commit -m "message"`                                  |
+| Create/update a PR             | `av pr --title "Title" --body "Description"`              |
+| Create PRs for part of a stack | `av pr --all --current`                                   |
+| Create PRs for entire stack    | `av pr --all`                                             |
+| Sync after making changes      | `av sync --push=yes`                                      |
+| After a PR is merged           | `av sync --all --push=yes --prune=yes`                    |
+| Switch branches                | `av switch`                                               |
+| View diff against parent       | `av diff`                                                 |
 
 ## Important Behaviors
 
