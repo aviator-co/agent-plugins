@@ -1,12 +1,12 @@
-# Aviator Plugins for Claude Code
+# Aviator Plugins for coding agents
 
-Claude Code plugins from [Aviator](https://aviator.co).
+Agent plugins from [Aviator](https://aviator.co).
 
 ## Plugins
 
 ### av-cli
 
-Teaches Claude how to use the [Aviator CLI](https://github.com/aviator-co/av) (`av`) for stacked PR workflows.
+Teaches Claude code or other coding agents how to use the [Aviator CLI](https://github.com/aviator-co/av) (`av`) for stacked PR workflows.
 
 **What is av?** The Aviator CLI is a command-line tool for managing stacked pull requests on GitHub. Stacked PRs let you break large features into small, reviewable chunks while maintaining dependencies between them. av automates the tedious parts: rebasing child branches when parents change, setting correct PR bases, and keeping everything in sync.
 
@@ -32,7 +32,7 @@ Each layer gets a focused, reviewable PR. When you update the DB schema, `av syn
 
 **Usage:**
 
-When you're in an av-initialized repository, Claude will automatically use `av` commands for branch and PR operations. Just ask naturally:
+When you're in an av-initialized repository, the agent will automatically use `av` commands for branch and PR operations. Just ask naturally:
 
 - "Create a new branch for the login feature"
 - "Create PRs for my stack"
@@ -74,7 +74,7 @@ run `av pr --all` to create PRs for the entire stack.
 
 ```bash
 # Add the Aviator plugin marketplace
-/plugin marketplace add aviator-co/claude-plugins
+/plugin marketplace add aviator-co/agent-plugins
 
 # Install plugins
 /plugin install av-cli
@@ -84,7 +84,7 @@ run `av pr --all` to create PRs for the entire stack.
 
 ```bash
 # Clone the repository
-git clone https://github.com/aviator-co/claude-plugins.git
+git clone https://github.com/aviator-co/agent-plugins.git
 
 # Use with Claude Code
 claude --plugin-dir /path/to/claude-plugins
@@ -99,7 +99,7 @@ claude --plugin-dir /path/to/claude-plugins
 
 ## Contributing
 
-Contributions welcome! Please open an issue or PR on [GitHub](https://github.com/aviator-co/claude-plugins).
+Contributions welcome! Please open an issue or PR on [GitHub](https://github.com/aviator-co/agent-plugins).
 
 ## License
 
