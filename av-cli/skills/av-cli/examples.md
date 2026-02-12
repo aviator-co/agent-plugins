@@ -395,14 +395,62 @@ av sync --all
 # onto the correct commit on main
 ```
 
+## Example 16: Setting Up a Worktree for av
+
+When working on multiple features simultaneously, use git worktrees with av.
+
+```bash
+# From your main repo, create a worktree and navigate to it
+git worktree add <path> master
+cd <path>
+
+# Create your first branch (no av init needed - worktrees share .git)
+av branch feature-name
+
+# Now you can work independently in this worktree
+# The main repo remains on its original branch
+```
+
+**Why use worktrees:**
+- Work on multiple stacks simultaneously without switching branches
+- Keep your main working directory clean while experimenting
+
+**Important considerations:**
+- Worktrees share the same `.git` directory, so av state (`.git/av/av.db`) is shared across all worktrees
+- Running `av sync --all` in one worktree will rebase/push branches that may be checked out in other worktrees
+- Avoid having the same branch checked out in multiple worktrees simultaneously
+- Each worktree should ideally work on a separate stack to avoid conflicts
+
+## Example 17: Non-Interactive Automation
+
+When using av in scripts or automation, avoid interactive prompts.
+
+```bash
+# Create PR without editor prompts
+av pr --title "Add new feature" --body "This PR adds X, Y, and Z"
+
+# Sync without confirmation prompts
+av sync --push=yes --prune=no
+
+# Full automated workflow
+av commit -A -m "Add feature"
+av pr --title "Add feature" --body "Implementation details"
+av sync --push=yes --prune=no
+```
+
+**Key flags for automation:**
+- `av pr --title "..." --body "..."` - Avoid editor prompts
+- `av sync --push=yes` - Push without confirmation
+- `av sync --prune=no` - Don't prompt about pruning merged branches
+
 ## Quick Reference: Common Workflows
 
-| Workflow          | Commands                                               |
-| ----------------- | ------------------------------------------------------ |
-| New feature stack | `av branch` → edit → `av commit -A -m "msg"` → `av pr` |
-| Update mid-stack  | edit → `av commit -a -m "msg"` → `av sync`             |
-| PR merged         | `av sync --all`                                        |
-| Need latest main  | `av sync --rebase-to-trunk`                            |
-| Resolve conflicts | fix files → `git add` → `av sync --continue`           |
-| View stack        | `av tree`                                              |
-| Navigate          | `av next`, `av prev`, `av switch`                      |
+| Workflow          | Commands                                                                    |
+| ----------------- | --------------------------------------------------------------------------- |
+| New feature stack | `av branch` → edit → `av commit -A -m "msg"` → `av pr --title "X" --body "Y"` |
+| Update mid-stack  | edit → `av commit -a -m "msg"` → `av sync --push=yes`                       |
+| PR merged         | `av sync --all --push=yes --prune=yes`                                      |
+| Need latest main  | `av sync --rebase-to-trunk`                                                 |
+| Resolve conflicts | fix files → `git add` → `av sync --continue`                                |
+| View stack        | `av tree`                                                                   |
+| Navigate          | `av next`, `av prev`, `av switch`                                           |

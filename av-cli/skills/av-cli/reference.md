@@ -160,8 +160,8 @@ av pr [flags]
 
 **Flags:**
 
-- `-t <title>, --title=<title>` - PR title
-- `-b <body>, --body=<body>` - PR body (use `--body -` for stdin)
+- `-t <title>, --title=<title>` - PR title (recommended: always specify to avoid prompts)
+- `-b <body>, --body=<body>` - PR body (recommended: always specify to avoid prompts; use `--body -` for stdin)
 - `--draft` - Create as draft PR
 - `--edit` - Edit title/body of existing PR
 - `--force` - Force create even if PR exists
@@ -174,14 +174,16 @@ av pr [flags]
 **Examples:**
 
 ```bash
-av pr                                    # Create PR, opens editor
-av pr -t "Add login" -b "Implements login flow"
-av pr --draft                            # Create as draft
+av pr --title "Add login" --body "Implements login flow"  # Non-interactive (recommended)
+av pr                                    # Create PR, opens editor (interactive)
+av pr --draft --title "WIP" --body "Work in progress"
 av pr --all                              # PRs for whole stack
 av pr --all --current                    # PRs up to current branch
 av pr --reviewers alice,bob              # Add reviewers
 av pr --queue                            # Add to merge queue
 ```
+
+**Note:** For non-interactive execution (automation, scripts, or when used by agents), always pass `--title` and `--body` explicitly to avoid editor prompts.
 
 ### av pr-status
 
@@ -217,13 +219,19 @@ Fetches from remote, restacks branches, and pushes changes.
 **Examples:**
 
 ```bash
-av sync                             # Sync current stack
+av sync                             # Sync current stack (interactive, prompts for push/prune)
 av sync --all                       # Sync all stacks
 av sync --rebase-to-trunk           # Rebase onto latest main
 av sync --all --rebase-to-trunk     # Rebase all stacks onto latest main
 av sync --push=yes                  # Auto-push without prompting
+av sync --push=yes --prune=no       # Push without prompting, don't prune merged branches
+av sync --push=no                   # Skip pushing entirely
 av sync --continue                  # Continue after conflict resolution
 ```
+
+**Non-interactive mode:** By default, `av sync` prompts for confirmation before pushing and before pruning merged branches. For automation or scripting, use explicit flags:
+- `--push=(yes|no|ask)` - Control push behavior (default: ask)
+- `--prune=(yes|no|ask)` - Control pruning of merged branches (default: ask)
 
 ### av restack
 
