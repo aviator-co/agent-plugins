@@ -1,4 +1,4 @@
-# Aviator Plugins for Agent Code
+# Aviator Plugins for coding agents
 
 Agent plugins from [Aviator](https://aviator.co).
 
