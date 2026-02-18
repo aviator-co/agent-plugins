@@ -65,8 +65,8 @@ av adopt [flags]
 **Examples:**
 
 ```bash
-av adopt                        # Interactive adoption
-av adopt --parent main          # Adopt current branch with main as parent
+av adopt                        # Interactive adoption (not usable by agents)
+av adopt --parent main          # Adopt current branch with main as parent (non-interactive)
 av adopt --remote origin/feat   # Adopt from remote
 ```
 
@@ -117,13 +117,20 @@ av commit [flags]
 - `--branch-name <name>` - Create new branch with specific name
 - `--parent <parent>` - Create new branch from specified parent
 
+**Differences from `git commit`:**
+
+- `--amend` reuses the existing commit message by default. There is no `--no-edit` flag — it is the default behavior.
+- Use `--amend --edit` to open the editor when amending (opposite of git's default).
+- `-a` behaves the same as git's `-a` (stages modified/deleted tracked files only).
+- `-A` / `--all-changes` is av-specific: stages ALL files including untracked (git has no equivalent single flag).
+
 **Examples:**
 
 ```bash
 av commit -m "Add feature"           # Basic commit
 av commit -a -m "Fix bug"            # Stage modified + commit
 av commit -A -m "Add new files"      # Stage all + commit
-av commit --amend                    # Amend without changing message
+av commit --amend                    # Amend without changing message (default, no --no-edit needed)
 av commit --amend --edit             # Amend and edit message
 av commit -b -m "Quick fix"          # Create branch + commit
 ```
@@ -137,6 +144,8 @@ av split-commit
 ```
 
 Interactively prompts to distribute diff chunks into separate commits.
+
+**Interactive only** — there is no non-interactive mode. For agents, use `git reset HEAD~1` followed by manual staging and separate `av commit` calls instead.
 
 ### av squash
 
@@ -224,14 +233,15 @@ av sync --all                       # Sync all stacks
 av sync --rebase-to-trunk           # Rebase onto latest main
 av sync --all --rebase-to-trunk     # Rebase all stacks onto latest main
 av sync --push=yes                  # Auto-push without prompting
-av sync --push=yes --prune=no       # Push without prompting, don't prune merged branches
+av sync --push=yes --prune=yes      # Push and prune merged branches without prompting
 av sync --push=no                   # Skip pushing entirely
 av sync --continue                  # Continue after conflict resolution
 ```
 
-**Non-interactive mode:** By default, `av sync` prompts for confirmation before pushing and before pruning merged branches. For automation or scripting, use explicit flags:
-- `--push=(yes|no|ask)` - Control push behavior (default: ask)
-- `--prune=(yes|no|ask)` - Control pruning of merged branches (default: ask)
+**Non-interactive mode:** By default, `av sync` prompts for confirmation before pushing and before pruning merged branches. For automation or scripting, use explicit flags with `=` syntax (a space does not work):
+
+- `--push=(yes|no|ask)` — Control push behavior (default: ask). Example: `--push=yes`
+- `--prune=(yes|no|ask)` — Control pruning of merged branches (default: ask). Example: `--prune=no`
 
 ### av restack
 
@@ -371,6 +381,8 @@ Interactively reorder the stack.
 ```
 av reorder [--continue | --abort]
 ```
+
+**Interactive only** — opens an editor and has no non-interactive mode. For agents, use `av reparent`, `av squash`, `git reset`, and manual `av commit` calls to achieve the same results.
 
 Like `git rebase -i` but across all branches in the stack. Can:
 

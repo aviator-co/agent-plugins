@@ -96,7 +96,7 @@ av tree
              └── feature-logout (PR #3 - draft)
 ```
 
-## Example 2: Creating PRs for Entire Stack at Once
+## Example 3: Creating PRs for Entire Stack at Once
 
 Build the stack locally, then create all PRs together.
 
@@ -122,7 +122,7 @@ av prev --first
 av pr --all --current  # Only creates PR for feature-api
 ```
 
-## Example 3: Updating a Branch Mid-Stack
+## Example 4: Updating a Branch Mid-Stack
 
 When you need to make changes to a branch that has children.
 
@@ -142,7 +142,7 @@ av commit -a -m "Fix API response format"
 av sync
 ```
 
-## Example 4: After a PR is Merged
+## Example 5: After a PR is Merged
 
 When a PR in your stack gets merged to main.
 
@@ -163,7 +163,7 @@ av tree
 #         └── feature-logout (PR #3)
 ```
 
-## Example 5: Resolving Rebase Conflicts
+## Example 6: Resolving Rebase Conflicts
 
 When sync or restack encounters merge conflicts.
 
@@ -185,7 +185,7 @@ av sync --abort
 av sync --skip
 ```
 
-## Example 6: Reorganizing a Stack with Reorder
+## Example 7: Reorganizing a Stack with Reorder
 
 Move commits between branches or reorder branches.
 
@@ -213,7 +213,7 @@ av reorder --continue  # after resolving
 av reorder --abort     # to cancel
 ```
 
-## Example 7: Adopting Existing Branches
+## Example 8: Adopting Existing Branches
 
 Bring existing git branches into av management.
 
@@ -237,7 +237,7 @@ av adopt --parent main
 av adopt --remote origin/colleague-feature
 ```
 
-## Example 8: Working with a Colleague's Stack
+## Example 9: Working with a Colleague's Stack
 
 Use `av adopt --remote` to fetch and work on branches from teammates.
 
@@ -265,7 +265,7 @@ This is useful for:
 - Collaborating on the same stack
 - Reviewing PRs locally with full stack context
 
-## Example 9: Splitting a Large Commit
+## Example 10: Splitting a Large Commit
 
 Break up a commit that's too big.
 
@@ -281,7 +281,72 @@ av split-commit
 # Children branches are automatically restacked
 ```
 
-## Example 9: Working with Draft PRs
+## Example 11: Moving Changes Between Stack Layers
+
+When you need to move committed changes from one branch to another in the stack — for example, you committed on the wrong branch, or you need to split work differently.
+
+**Scenario A: Move the last commit from a child branch to its parent**
+
+```bash
+# You're on feature-ui and realize the last commit belongs on feature-api (parent)
+
+# 1. Soft-reset to undo the commit but keep changes staged
+git reset --soft HEAD~1
+
+# 2. Stash the changes
+git stash
+
+# 3. Switch to the parent branch
+av switch feature-api
+
+# 4. Apply the stashed changes and amend (or create a new commit)
+git stash pop
+av commit --amend -a
+
+# 5. The amend automatically restacks children, so switch back
+av switch feature-ui
+```
+
+**Scenario B: Move unstaged/working changes to a different branch**
+
+```bash
+# You've been editing on the wrong branch
+git stash
+av switch correct-branch
+git stash pop
+# Now commit on the correct branch
+av commit -A -m "Add feature"
+```
+
+**Scenario C: Split a branch's commits across parent and child**
+
+```bash
+# You're on feature-api with commits that should be split:
+# some belong here, others belong on the child feature-ui
+
+# 1. Soft-reset all commits on this branch
+git reset --soft $(git merge-base HEAD feature-api@{upstream} 2>/dev/null || av prev --first && git merge-base HEAD main)
+
+# Simpler: if you know how many commits to undo
+git reset --soft HEAD~3
+
+# 2. Stage and commit only what belongs on this branch
+git add src/api/
+av commit -m "Add API endpoints"
+
+# 3. Stash the remaining changes
+git stash
+
+# 4. Move to the child branch and apply
+av switch feature-ui
+git stash pop
+av commit --amend -a
+
+# 5. Sync to push everything
+av sync --push=yes --prune=yes
+```
+
+## Example 12: Working with Draft PRs
 
 Create draft PRs and convert them when ready.
 
@@ -296,7 +361,7 @@ av pr --edit
 # Or use GitHub UI / gh cli to convert from draft
 ```
 
-## Example 10: Rebasing Stack onto Latest Main
+## Example 13: Rebasing Stack onto Latest Main
 
 When you need to incorporate latest changes from main.
 
@@ -314,7 +379,7 @@ av sync --rebase-to-trunk
 # - Resolving conflicts preemptively
 ```
 
-## Example 11: Navigating a Stack
+## Example 14: Navigating a Stack
 
 Moving between branches in your stack.
 
@@ -337,7 +402,7 @@ av switch feature-login
 av switch https://github.com/org/repo/pull/123
 ```
 
-## Example 12: Amending a Commit
+## Example 15: Amending a Commit
 
 Fix the last commit without creating a new one.
 
@@ -354,7 +419,7 @@ av commit --amend -a
 av commit --amend --edit -a
 ```
 
-## Example 13: Creating a Branch from a Different Parent
+## Example 16: Creating a Branch from a Different Parent
 
 When you want to branch from somewhere other than current branch.
 
@@ -366,7 +431,7 @@ av branch --parent main hotfix-urgent
 av commit --parent main --branch-name hotfix-urgent -A -m "Urgent fix"
 ```
 
-## Example 14: Squashing Branch Commits
+## Example 17: Squashing Branch Commits
 
 Combine multiple commits on a branch into one.
 
@@ -383,7 +448,7 @@ av squash
 # All commits combined, children restacked
 ```
 
-## Example 15: Handling a Flattened PR
+## Example 18: Handling a Flattened PR
 
 When a PR's parent was squash-merged.
 
@@ -395,7 +460,7 @@ av sync --all
 # onto the correct commit on main
 ```
 
-## Example 16: Setting Up a Worktree for av
+## Example 19: Setting Up a Worktree for av
 
 When working on multiple features simultaneously, use git worktrees with av.
 
@@ -421,27 +486,50 @@ av branch feature-name
 - Avoid having the same branch checked out in multiple worktrees simultaneously
 - Each worktree should ideally work on a separate stack to avoid conflicts
 
-## Example 17: Non-Interactive Automation
+## Example 20: Non-Interactive Automation
 
-When using av in scripts or automation, avoid interactive prompts.
+When using av in scripts, automation, or as an agent — avoid all interactive prompts. Every TUI prompt is a blocker for non-human users.
+
+**Critical:** Flag values use `=` syntax. `--push=yes` works; `--push yes` does NOT.
 
 ```bash
-# Create PR without editor prompts
+# Create PR without editor prompts — always pass --title and --body
 av pr --title "Add new feature" --body "This PR adds X, Y, and Z"
 
 # Sync without confirmation prompts
-av sync --push=yes --prune=no
+av sync --push=yes --prune=yes
 
-# Full automated workflow
+# Full automated workflow: commit, PR, sync
 av commit -A -m "Add feature"
 av pr --title "Add feature" --body "Implementation details"
-av sync --push=yes --prune=no
+av sync --push=yes --prune=yes
+
+# Adopt a branch non-interactively (avoid bare `av adopt` which opens a picker)
+av switch some-branch
+av adopt --parent main
+
+# Switch branches by name (avoid bare `av switch` which opens a picker)
+av switch feature-login
+
+# Amend without editor (av reuses message by default — no --no-edit flag needed)
+av commit --amend -a
 ```
 
-**Key flags for automation:**
-- `av pr --title "..." --body "..."` - Avoid editor prompts
-- `av sync --push=yes` - Push without confirmation
-- `av sync --prune=no` - Don't prompt about pruning merged branches
+**Commands with no non-interactive mode (avoid in automation):**
+- `av split-commit` — use `git reset HEAD~1` + manual staging + `av commit` instead
+- `av reorder` — use `av reparent`, `av squash`, `git reset`, and `av commit` instead
+- `av switch` (no args) — always pass a branch name
+- `av adopt` (no args) — always pass `--parent`
+
+**All non-interactive flags at a glance:**
+
+| Command | Non-interactive flag(s) |
+| --- | --- |
+| `av sync` | `--push=yes` / `--push=no`, `--prune=yes` / `--prune=no` |
+| `av pr` | `--title "..."`, `--body "..."` |
+| `av switch` | Pass branch name as argument |
+| `av adopt` | `--parent <parent>` |
+| `av commit --amend` | Default behavior (no `--no-edit` needed) |
 
 ## Quick Reference: Common Workflows
 
