@@ -13,6 +13,12 @@
       "source": "./av-cli",
       "description": "Stacked PR workflows with Aviator CLI",
       "version": "1.0.0"
+    },
+    {
+      "name": "aviator",
+      "source": "./aviator",
+      "description": "Runbooks and workflow automation with Aviator MCP",
+      "version": "1.0.0"
     }
   ]
 }

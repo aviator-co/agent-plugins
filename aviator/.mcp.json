@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "aviator": {
+      "type": "http",
+      "url": "https://app.aviator.co/mcp"
+    }
+  }
+}
