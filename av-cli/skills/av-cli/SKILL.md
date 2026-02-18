@@ -189,7 +189,7 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 **Non-interactive mode:** `av sync` prompts for confirmation by default. Use explicit flags (note the `=` syntax — a space does not work):
 
 ```bash
-av sync --push=yes --prune=yes   # Push without prompting, don't prune merged branches
+av sync --push=yes --prune=yes   # Push without prompting and prune merged branches
 av sync --push=no               # Skip pushing entirely
 ```
 
