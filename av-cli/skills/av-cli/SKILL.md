@@ -39,6 +39,29 @@ cat .git/av/av.db
 - For workflow examples, see [examples.md](./examples.md).
 - Run `av <command> --help` or `man av-<command>` for up-to-date command documentation.
 
+## Non-Interactive Mode (Agents & Automation)
+
+Many `av` commands default to interactive TUI prompts that agents cannot use. **Always use the non-interactive flags listed below.**
+
+**Critical syntax note:** Flag values require `=` (equals sign), not a space. `--push=yes` works; `--push yes` does NOT.
+
+| Command | Interactive behavior | Non-interactive flags |
+| --- | --- | --- |
+| `av sync` | Prompts for push and prune confirmation | `--push=yes` (or `=no`), `--prune=yes` (or `=no`) |
+| `av pr` | Opens editor for title/body | `--title "..." --body "..."` |
+| `av switch` (no args) | Opens branch picker | `av switch <branch-name>` |
+| `av adopt` (no args) | Interactive branch selection | `av adopt --parent <parent>` on the target branch |
+| `av split-commit` | Interactive chunk picker | **No non-interactive mode.** Use `git reset` + manual staging instead |
+| `av reorder` | Opens editor for rebase plan | **No non-interactive mode.** Use `av reparent` + manual operations instead |
+
+**Recommended agent workflow:**
+
+```bash
+av commit -A -m "message"
+av pr --title "Title" --body "Body"
+av sync --push=yes --prune=yes
+```
+
 ## Understanding Stack Structure
 
 Read `.git/av/av.db` to understand branch relationships. Format:
@@ -116,10 +139,12 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 | `av branch <name>`                   | Create a new branch stacked on current branch            |
 | `av branch --parent <parent> <name>` | Create branch with specific parent                       |
 | `av branch -m <new-name>`            | Rename current branch                                    |
-| `av adopt`                           | Adopt existing non-av branches into the stack            |
+| `av adopt --parent <parent>`         | Adopt current branch into the stack with given parent    |
 | `av adopt --remote <branch>`         | Fetch and adopt a remote branch (e.g., colleague's work) |
 | `av reparent --parent <new-parent>`  | Move current branch to a different parent                |
 | `av orphan`                          | Remove current branch from av management                 |
+
+**`av adopt --remote` is particularly useful** for pulling in a colleague's branch (or any remote branch not yet tracked locally) and automatically setting up the correct stack relationships. It fetches the branch, detects its parent chain, and integrates it into your local av state — much more reliable than manually checking out and adopting.
 
 ### Committing
 
@@ -129,8 +154,15 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 | `av commit -a -m "message"` | Stage modified files and commit                  |
 | `av commit -A -m "message"` | Stage ALL files (including untracked) and commit |
 | `av commit --amend`         | Amend last commit, then restack children         |
-| `av split-commit`           | Interactively split current commit               |
+| `av split-commit`           | Interactively split current commit (no non-interactive mode) |
 | `av squash`                 | Squash all branch commits into one               |
+
+**`av commit` vs `git commit` — key differences:**
+
+- `--amend` reuses the existing message by default. There is no `--no-edit` flag — it is the default behavior.
+- `--edit` explicitly opens the editor when amending (the opposite default from git).
+- `-a` behaves the same as git's `-a` (stages modified/deleted tracked files only).
+- `-A` / `--all-changes` is av-specific: stages ALL files including untracked (git has no equivalent single flag).
 
 ### Pull Requests
 
@@ -154,11 +186,13 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 | `av restack`                      | Rebase children locally (no push)   |
 | `av fetch`                        | Fetch latest state from GitHub      |
 
-**Non-interactive mode:** `av sync` prompts for confirmation by default. For automation/scripting, use explicit flags:
+**Non-interactive mode:** `av sync` prompts for confirmation by default. Use explicit flags (note the `=` syntax — a space does not work):
+
 ```bash
-av sync --push=yes --prune=no   # Push without prompting, don't prune merged branches
+av sync --push=yes --prune=yes   # Push without prompting, don't prune merged branches
 av sync --push=no               # Skip pushing entirely
 ```
+
 Options for `--push` and `--prune`: `yes`, `no`, or `ask` (default).
 
 ### Navigation
@@ -195,7 +229,8 @@ Once a repo is av-initialized, **use av for everything** - even single PRs. av w
 | Create PRs for entire stack    | `av pr --all`                                             |
 | Sync after making changes      | `av sync --push=yes`                                      |
 | After a PR is merged           | `av sync --all --push=yes --prune=yes`                    |
-| Switch branches                | `av switch`                                               |
+| Adopt a remote branch          | `av adopt --remote origin/<branch>`                       |
+| Switch branches                | `av switch <branch>`                                      |
 | View diff against parent       | `av diff`                                                 |
 
 ## Important Behaviors
