@@ -68,6 +68,30 @@ You can now make changes and commit to each branch. When ready,
 run `av pr --all` to create PRs for the entire stack.
 ```
 
+---
+
+### aviator
+
+Connects Claude Code to [Aviator Runbooks](https://aviator.co/runbooks) via MCP for workflow automation.
+
+**What are Runbooks?** Aviator Runbooks let you capture and replay complex development workflows. Create a runbook from your Claude session to save your exploration, decisions, and implementation approach for future use or to share with your team.
+
+**What this plugin does:**
+
+- Connects to the Aviator MCP server for runbook operations
+- Creates runbooks from your current Claude session context
+- Handles OAuth authentication automatically
+- Provides access to Aviator's workflow automation tools
+
+**Usage:**
+
+Use `/aviator runbook` to create a runbook from your current session.
+
+**Requirements:**
+
+- An Aviator account at https://app.aviator.co
+- Repository connected to Aviator
+
 ## Installation
 
 ### From Marketplace (Recommended)
@@ -78,6 +102,7 @@ run `av pr --all` to create PRs for the entire stack.
 
 # Install plugins
 /plugin install av-cli
+/plugin install aviator
 ```
 
 ### Manual Installation
@@ -93,6 +118,7 @@ claude --plugin-dir /path/to/claude-plugins
 ## Learn More
 
 - [Aviator](https://aviator.co)
+- [Aviator Runbooks](https://aviator.co/runbooks)
 - [Aviator CLI Documentation](https://docs.aviator.co/aviator-cli)
 - [Stacked PRs Guide](https://docs.aviator.co/aviator-cli/concepts/stacked-prs)
 - [av GitHub Repository](https://github.com/aviator-co/av)
