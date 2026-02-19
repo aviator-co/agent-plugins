@@ -1,7 +1,6 @@
 {
   "name": "av-cli",
   "description": "Claude Code plugin for Aviator CLI stacked PR workflows",
-  "version": "1.0.0",
   "author": {
     "name": "Aviator",
     "email": "support@aviator.co"

@@ -97,6 +97,18 @@ claude --plugin-dir /path/to/claude-plugins
 - [Stacked PRs Guide](https://docs.aviator.co/aviator-cli/concepts/stacked-prs)
 - [av GitHub Repository](https://github.com/aviator-co/av)
 
+## Versioning and Cache
+
+Maintainers should bump the version in `.claude-plugin/marketplace.json` when updating plugin content, to trigger cache invalidation for users.
+
+If a user isn't seeing the latest plugin version after updating, they can manually clear the cache and reinstall:
+
+```bash
+rm -rf ~/.claude/plugins/cache/aviator-plugins/av-cli
+```
+
+Then run `/plugin install av-cli` again.
+
 ## Contributing
 
 Contributions welcome! Please open an issue or PR on [GitHub](https://github.com/aviator-co/agent-plugins).
