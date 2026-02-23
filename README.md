@@ -92,6 +92,18 @@ Use `/aviator runbook` to create a runbook from your current session.
 - An Aviator account at https://app.aviator.co
 - Repository connected to Aviator
 
+**Self-hosted / On-prem:** The plugin connects to `https://app.aviator.co/mcp` by default. To point it at a self-hosted instance, set the `AVIATOR_MCP_URL` environment variable:
+
+```bash
+export AVIATOR_MCP_URL=https://aviator.your-company.com/mcp
+```
+
+Alternatively, you can configure the MCP server manually:
+
+```bash
+claude mcp add --transport http aviator https://aviator.your-company.com/mcp
+```
+
 ## Installation
 
 ### From Marketplace (Recommended)

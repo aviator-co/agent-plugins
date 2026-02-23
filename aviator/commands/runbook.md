@@ -19,12 +19,13 @@ Determine the current repository:
 git remote get-url origin
 ```
 
-Extract the repository name in `owner/repo` format from the git remote URL. Handle common formats:
+Extract the repository name in `owner/repo` format from the git remote URL. The host may be `github.com` or a self-hosted GitHub Enterprise instance. Handle common formats:
 - SSH: `git@github.com:owner/repo.git` → `owner/repo`
+- SSH (GHE): `git@github.mycompany.com:owner/repo.git` → `owner/repo`
 - HTTPS: `https://github.com/owner/repo.git` → `owner/repo`
-- HTTPS (no .git): `https://github.com/owner/repo` → `owner/repo`
+- HTTPS (GHE): `https://github.mycompany.com/owner/repo` → `owner/repo`
 
-Strip any trailing `.git` suffix.
+Strip any trailing `.git` suffix and ignore the hostname — only extract the `owner/repo` path.
 
 ### Step 2: Generate Handoff Document
 
@@ -60,5 +61,5 @@ Provide the user with:
 ## Error Handling
 
 - If authentication is required, Claude Code will automatically open a browser for OAuth login
-- If the repository is not found in Aviator, suggest connecting it at https://app.aviator.co/github/connect
-- If the API returns an error about credits, inform the user they may need to add runbook credits
+- If the repository is not found in Aviator, suggest connecting it in the Aviator dashboard under GitHub settings
+- If the API returns an error about credits, inform the user they may need to add runbook credits in their Aviator dashboard
