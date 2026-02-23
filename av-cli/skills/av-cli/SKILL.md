@@ -29,6 +29,12 @@ cat .git/av/av.db
 
 **Do NOT use `av tree` to understand structure** - its visual output is misleading. Only use av.db.
 
+## Critical Rules
+
+**NEVER use `git commit` or `git push` directly.** Always use `av commit` and `av sync --push=yes`. Using git directly skips restacking and breaks the stack.
+
+**NEVER pass `--no-edit` to `av commit --amend`.** The flag doesn't exist — no-edit is already the default behavior. Just use `av commit --amend`.
+
 ## Detection & Setup
 
 **Check if av is initialized**: Look for `.git/av/av.db` file in the repository root.
@@ -163,6 +169,12 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 - `--edit` explicitly opens the editor when amending (the opposite default from git).
 - `-a` behaves the same as git's `-a` (stages modified/deleted tracked files only).
 - `-A` / `--all-changes` is av-specific: stages ALL files including untracked (git has no equivalent single flag).
+
+**Common mistakes:**
+
+- `git commit -m "message"` → use `av commit -m "message"` instead
+- `git push` → use `av sync --push=yes` instead
+- `av commit --amend --no-edit` → just `av commit --amend` (no-edit is the default, the flag doesn't exist)
 
 ### Pull Requests
 
