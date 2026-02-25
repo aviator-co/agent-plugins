@@ -15,17 +15,19 @@ allowed-tools:
 
 You are helping the user work with stacked pull requests using Aviator's `av` CLI tool.
 
-**IMPORTANT: NEVER modify `.git/av/av.db` directly.** This JSON file is managed by `av` commands. You may read it to understand stack structure, but always use `av` CLI commands to make changes.
+**IMPORTANT: NEVER modify the `av/av.db` file inside the git dir (found via `git rev-parse --git-common-dir`) directly.** This JSON file is managed by `av` commands. You may read it to understand stack structure, but always use `av` CLI commands to make changes.
 
 ## First Steps (ALWAYS DO THIS)
 
-When working with av, **ALWAYS run `cat .git/av/av.db` first** to understand the branch structure. This JSON file is the source of truth.
+When working with av, **ALWAYS read `av/av.db` from the git common dir first** to understand the branch structure. This JSON file is the source of truth.
 
 ```bash
-cat .git/av/av.db
+cat "$(git rev-parse --git-common-dir)/av/av.db"
 ```
 
 **Note:** Use `cat`, not the Read tool - the `.db` extension causes Read to incorrectly treat it as binary.
+
+**Tip:** Use `git branch --show-current` to identify the current branch, then look up that branch's entry in av.db for its stack context and PR info.
 
 **Do NOT use `av tree` to understand structure** - its visual output is misleading. Only use av.db.
 
@@ -37,7 +39,7 @@ cat .git/av/av.db
 
 ## Detection & Setup
 
-**Check if av is initialized**: Look for `.git/av/av.db` file in the repository root.
+**Check if av is initialized**: `test -f "$(git rev-parse --git-common-dir)/av/av.db"`
 
 - If the file exists, the repo is av-initialized. Use `av` commands for branch/PR operations.
 - If the file does NOT exist, ask the user if they want to initialize with `av init`.
@@ -70,7 +72,7 @@ av sync --push=yes --prune=yes
 
 ## Understanding Stack Structure
 
-Read `.git/av/av.db` to understand branch relationships. Format:
+Read `"$(git rev-parse --git-common-dir)/av/av.db"` to understand branch relationships. Format:
 
 ```json
 {
