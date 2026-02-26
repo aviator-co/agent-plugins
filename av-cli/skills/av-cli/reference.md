@@ -232,16 +232,15 @@ av sync                             # Sync current stack (interactive, prompts f
 av sync --all                       # Sync all stacks
 av sync --rebase-to-trunk           # Rebase onto latest main
 av sync --all --rebase-to-trunk     # Rebase all stacks onto latest main
-av sync --push=yes                  # Auto-push without prompting
-av sync --push=yes --prune=yes      # Push and prune merged branches without prompting
-av sync --push=no                   # Skip pushing entirely
+av sync --push=yes --prune=yes      # Push and prune without prompting
+av sync --push=no --prune=yes       # Skip pushing entirely
 av sync --continue                  # Continue after conflict resolution
 ```
 
 **Non-interactive mode:** By default, `av sync` prompts for confirmation before pushing and before pruning merged branches. For automation or scripting, use explicit flags with `=` syntax (a space does not work):
 
 - `--push=(yes|no|ask)` — Control push behavior (default: ask). Example: `--push=yes`
-- `--prune=(yes|no|ask)` — Control pruning of merged branches (default: ask). Example: `--prune=no`
+- `--prune=(yes|no|ask)` — Control pruning of merged branches (default: ask). Example: `--prune=yes`
 
 ### av restack
 

@@ -33,7 +33,7 @@ cat "$(git rev-parse --git-common-dir)/av/av.db"
 
 ## Critical Rules
 
-**NEVER use `git commit` or `git push` directly.** Always use `av commit` and `av sync --push=yes`. Using git directly skips restacking and breaks the stack.
+**NEVER use `git commit` or `git push` directly.** Always use `av commit` and `av sync --push=yes --prune=yes`. Using git directly skips restacking and breaks the stack.
 
 **NEVER pass `--no-edit` to `av commit --amend`.** The flag doesn't exist — no-edit is already the default behavior. Just use `av commit --amend`.
 
@@ -161,6 +161,7 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 | `av commit -m "message"`    | Commit and auto-restack children                 |
 | `av commit -a -m "message"` | Stage modified files and commit                  |
 | `av commit -A -m "message"` | Stage ALL files (including untracked) and commit |
+| `git add <files> && av commit -m "msg"` | Stage specific files, then commit |
 | `av commit --amend`         | Amend last commit, then restack children         |
 | `av split-commit`           | Interactively split current commit (no non-interactive mode) |
 | `av squash`                 | Squash all branch commits into one               |
@@ -172,10 +173,12 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 - `-a` behaves the same as git's `-a` (stages modified/deleted tracked files only).
 - `-A` / `--all-changes` is av-specific: stages ALL files including untracked (git has no equivalent single flag).
 
+**Selective staging:** `-a` and `-A` stage everything (tracked or all). To commit only specific files, stage them first with `git add <files>`, then run `av commit` without `-a`/`-A`. This works for both new commits and amends.
+
 **Common mistakes:**
 
 - `git commit -m "message"` → use `av commit -m "message"` instead
-- `git push` → use `av sync --push=yes` instead
+- `git push` → use `av sync --push=yes --prune=yes` instead
 - `av commit --amend --no-edit` → just `av commit --amend` (no-edit is the default, the flag doesn't exist)
 
 ### Pull Requests
@@ -203,11 +206,13 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 **Non-interactive mode:** `av sync` prompts for confirmation by default. Use explicit flags (note the `=` syntax — a space does not work):
 
 ```bash
-av sync --push=yes --prune=yes   # Push without prompting and prune merged branches
-av sync --push=no               # Skip pushing entirely
+av sync --push=yes --prune=yes          # Sync current stack
+av sync --all --push=no --prune=yes     # Sync all stacks (use after PRs are merged, ask user before pushing)
 ```
 
-Options for `--push` and `--prune`: `yes`, `no`, or `ask` (default).
+Both `--push` and `--prune` must always be specified — omitting either triggers a TUI prompt. Options: `yes`, `no`, or `ask` (default). `--prune=yes` is safe in most cases — it only deletes local branches whose PRs have already been merged. Use `--prune=no` if you need to keep merged branches around locally (e.g., for reference or if other worktrees have them checked out).
+
+**Timeout:** `av sync` performs a fetch + rebase + push cycle and can take 15-30+ seconds. Use a timeout of at least 60 seconds for any `av sync` command.
 
 ### Navigation
 
@@ -241,8 +246,8 @@ Once a repo is av-initialized, **use av for everything** - even single PRs. av w
 | Create/update a PR             | `av pr --title "Title" --body "Description"`              |
 | Create PRs for part of a stack | `av pr --all --current`                                   |
 | Create PRs for entire stack    | `av pr --all`                                             |
-| Sync after making changes      | `av sync --push=yes`                                      |
-| After a PR is merged           | `av sync --all --push=yes --prune=yes`                    |
+| Sync after making changes      | `av sync --push=yes --prune=yes`                           |
+| After a PR is merged           | `av sync --all --push=no --prune=yes`                     |
 | Adopt a remote branch          | `av adopt --remote origin/<branch>`                       |
 | Switch branches                | `av switch <branch>`                                      |
 | View diff against parent       | `av diff`                                                 |
@@ -252,6 +257,6 @@ Once a repo is av-initialized, **use av for everything** - even single PRs. av w
 1. **Use av commands consistently** - they work for single PRs and stacks alike.
 2. **`av commit` auto-restacks** child branches when you have them.
 3. **Let `av pr` set the base** - don't manually specify base branches.
-4. **After PR merges**, run `av sync --all` to clean up and rebase remaining branches.
+4. **After PR merges**, run `av sync --all --push=no --prune=yes` to clean up and rebase remaining branches. Ask the user before pushing all stacks.
 5. **Don't mention stacks in commits/PRs** - never reference stack position, parent branches, or stack relationships in commit messages, PR titles, or PR bodies. The av tooling handles this metadata automatically.
 6. **Always show full PR URLs** - when displaying PR info, use the `permalink` field from av.db. Never show just "PR #123" - always show the full clickable URL like `https://github.com/org/repo/pull/123`.

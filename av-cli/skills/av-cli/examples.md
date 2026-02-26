@@ -139,7 +139,7 @@ av commit -a -m "Fix API response format"
 # av automatically restacks feature-tests onto the new commit
 
 # Sync to push changes and update PRs
-av sync
+av sync --push=yes --prune=yes
 ```
 
 ## Example 5: After a PR is Merged
@@ -148,7 +148,7 @@ When a PR in your stack gets merged to main.
 
 ```bash
 # feature-auth was merged to main
-av sync --all
+av sync --all --push=no --prune=yes
 # This will:
 # 1. Fetch latest main (with merged feature-auth)
 # 2. Detect that feature-auth was merged
@@ -168,7 +168,7 @@ av tree
 When sync or restack encounters merge conflicts.
 
 ```bash
-av sync
+av sync --push=yes --prune=yes
 # Output: Conflict in src/api.js
 
 # 1. Open the conflicted file and resolve
@@ -256,7 +256,7 @@ av adopt --remote origin/alice/feature-api
 av tree                    # See the adopted stack
 av switch alice/feature-api  # Work on it
 av commit -a -m "Address review feedback"
-av sync                    # Push your changes
+av sync --push=yes --prune=yes  # Push your changes
 ```
 
 This is useful for:
@@ -367,7 +367,7 @@ When you need to incorporate latest changes from main.
 
 ```bash
 # Your stack is based on an older main
-av sync --rebase-to-trunk
+av sync --rebase-to-trunk --push=yes --prune=yes
 
 # This rebases the stack root onto latest main
 # Then restacks all child branches
@@ -410,8 +410,12 @@ Fix the last commit without creating a new one.
 # Make additional changes
 # edit files...
 
-# Amend the last commit
+# Amend the last commit (stages all modified tracked files)
 av commit --amend -a
+
+# Amend with only specific files (don't stage everything)
+git add src/api.js src/utils.js
+av commit --amend
 
 # This amends the commit and restacks children
 
@@ -454,7 +458,7 @@ When a PR's parent was squash-merged.
 
 ```bash
 # After parent PR was squash-merged, sync to fix the stack
-av sync --all
+av sync --all --push=no --prune=yes
 
 # av detects the squash merge and rebases your branch
 # onto the correct commit on main
@@ -525,7 +529,7 @@ av commit --amend -a
 
 | Command | Non-interactive flag(s) |
 | --- | --- |
-| `av sync` | `--push=yes` / `--push=no`, `--prune=yes` / `--prune=no` |
+| `av sync` | `--push=yes` / `--push=no`, `--prune=yes` / `--prune=yes` |
 | `av pr` | `--title "..."`, `--body "..."` |
 | `av switch` | Pass branch name as argument |
 | `av adopt` | `--parent <parent>` |
@@ -536,9 +540,9 @@ av commit --amend -a
 | Workflow          | Commands                                                                    |
 | ----------------- | --------------------------------------------------------------------------- |
 | New feature stack | `av branch` → edit → `av commit -A -m "msg"` → `av pr --title "X" --body "Y"` |
-| Update mid-stack  | edit → `av commit -a -m "msg"` → `av sync --push=yes`                       |
-| PR merged         | `av sync --all --push=yes --prune=yes`                                      |
-| Need latest main  | `av sync --rebase-to-trunk`                                                 |
+| Update mid-stack  | edit → `av commit -a -m "msg"` → `av sync --push=yes --prune=yes`            |
+| PR merged         | `av sync --all --push=no --prune=yes`                                      |
+| Need latest main  | `av sync --rebase-to-trunk --push=yes --prune=yes`                           |
 | Resolve conflicts | fix files → `git add` → `av sync --continue`                                |
 | View stack        | `av tree`                                                                   |
 | Navigate          | `av next`, `av prev`, `av switch`                                           |
