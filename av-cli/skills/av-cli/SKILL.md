@@ -33,7 +33,7 @@ cat "$(git rev-parse --git-common-dir)/av/av.db"
 
 ## Critical Rules
 
-**NEVER use `git commit` or `git push` directly.** Always use `av commit` and `av sync --push=yes --prune=yes`. Using git directly skips restacking and breaks the stack.
+**NEVER use `git commit` or `git push` directly.** Always use `av commit` for commits and `av pr` (which pushes automatically) or `av sync --push=yes --prune=yes` for pushing. Using git directly skips restacking and breaks the stack.
 
 **NEVER pass `--no-edit` to `av commit --amend`.** The flag doesn't exist — no-edit is already the default behavior. Just use `av commit --amend`.
 
@@ -66,8 +66,8 @@ Many `av` commands default to interactive TUI prompts that agents cannot use. **
 
 ```bash
 av commit -A -m "message"
-av pr --title "Title" --body "Body"
-av sync --push=yes --prune=yes
+av pr --title "Title" --body "Body"  # pushes the branch and creates/updates the PR
+# av sync is only needed later to rebase the stack or push changes across multiple branches
 ```
 
 ## Understanding Stack Structure
@@ -178,8 +178,9 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 **Common mistakes:**
 
 - `git commit -m "message"` → use `av commit -m "message"` instead
-- `git push` → use `av sync --push=yes --prune=yes` instead
+- `git push` → use `av pr` when creating a PR (it pushes automatically); use `av sync --push=yes --prune=yes` to push changes and rebase across the stack
 - `av commit --amend --no-edit` → just `av commit --amend` (no-edit is the default, the flag doesn't exist)
+- `av sync` before/after `av pr` → unnecessary; `av pr` pushes on its own
 
 ### Pull Requests
 
@@ -190,6 +191,8 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 | `av pr --all --current`                        | Create/update PRs up to current branch |
 | `av pr --draft`                                | Create PR as draft                     |
 | `av pr --edit`                                 | Edit existing PR title/body            |
+
+**`av pr` automatically pushes** the current branch to the remote before creating or updating the PR. No prior `av sync` or `git push` is needed.
 
 **Note:** Always pass `--title` and `--body` flags explicitly to avoid interactive prompts.
 
@@ -251,6 +254,8 @@ Once a repo is av-initialized, **use av for everything** - even single PRs. av w
 | Adopt a remote branch          | `av adopt --remote origin/<branch>`                       |
 | Switch branches                | `av switch <branch>`                                      |
 | View diff against parent       | `av diff`                                                 |
+
+**`av pr` vs `av sync`:** `av pr` pushes the current branch and creates/updates its PR — no separate push step needed. `av sync` fetches, rebases, and pushes across the entire stack. Use `av sync` for stack-wide rebase/push or cleanup after merges.
 
 ## Important Behaviors
 

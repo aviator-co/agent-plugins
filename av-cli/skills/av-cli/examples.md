@@ -503,10 +503,10 @@ av pr --title "Add new feature" --body "This PR adds X, Y, and Z"
 # Sync without confirmation prompts
 av sync --push=yes --prune=yes
 
-# Full automated workflow: commit, PR, sync
+# Full automated workflow: commit and create PR (av pr pushes automatically)
 av commit -A -m "Add feature"
 av pr --title "Add feature" --body "Implementation details"
-av sync --push=yes --prune=yes
+# Use av sync later to rebase or push changes across the stack
 
 # Adopt a branch non-interactively (avoid bare `av adopt` which opens a picker)
 av switch some-branch
