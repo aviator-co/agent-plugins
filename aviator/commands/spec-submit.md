@@ -1,10 +1,10 @@
 ---
-description: Create an Aviator Runbook from the current Claude session
+description: Submit a spec to Aviator to create a Runbook
 ---
 
-# Create Aviator Runbook
+# Submit Spec to Aviator
 
-Create a Runbook in Aviator based on the current Claude Code session context.
+Submit a spec to Aviator to create a Runbook from the current Claude Code session context.
 
 ## Arguments
 
@@ -43,9 +43,11 @@ Good message example:
 Bad message example (too technical, belongs in spec):
 > Fix `calculator.py:19` multiply bug (`return a + b` → `return a * b`), remove unused `import os` on line 3, fix `power()` return type on line 32. Add tests covering edge cases...
 
-#### Spec file (`spec.md`)
+#### Spec file
 
-If a spec file already exists in the conversation — either one the user wrote, one generated earlier in the session, or one provided via $ARGUMENTS — use it as-is. Do not restructure, reformat, or rewrite an existing spec. Pass it through directly.
+If a plan file exists from plan mode (check the plan file path mentioned in the system prompt), read it and check whether its content is relevant to the user's current intent. If it is, use it as-is — do not restructure, reformat, or rewrite it. Pass its content through directly as the spec. If the plan file is unrelated to the current task, ignore it and generate a new spec instead.
+
+Similarly, if a spec file already exists in the conversation — either one the user wrote, one generated earlier in the session, or one provided via $ARGUMENTS — use it as-is. Do not restructure, reformat, or rewrite an existing spec. Pass it through directly. When the spec comes from a file, preserve the original filename — do not rename it.
 
 If no existing spec is available, generate one. All the technical detail goes here. Use these sections:
 
@@ -72,14 +74,14 @@ Only generate a spec file if there's enough substance. A simple bug fix or singl
 
 ### Step 3: Confirm with User
 
-Before creating the runbook, show the user the handoff message and the spec file (if one was generated). Ask them to confirm everything looks right. They may want to adjust the scope, add details, or remove sections.
+Before creating the runbook, show the user the message and the spec file (if one was generated). Ask them to confirm everything looks right. They may want to adjust the scope, add details, or remove sections.
 
 ### Step 4: Create Runbook
 
-Use the `createRunbook` MCP tool from the Aviator server with:
+Use the `specSubmit` MCP tool from the Aviator server with:
 - `repo_name`: The repository in `owner/repo` format
-- `message`: The confirmed handoff message
-- `spec_files`: `[{"filename": "spec.md", "content": "..."}]` (only if a spec was generated; always a single file)
+- `message`: The confirmed message
+- `spec_files`: `[{"filename": "<original filename or spec.md>", "content": "..."}]` (only if a spec was generated; always a single file — use the original filename if the spec came from a file)
 
 The tool will return the runbook URL.
 
@@ -87,7 +89,7 @@ The tool will return the runbook URL.
 
 Provide the user with:
 - The Runbook URL from the tool response
-- A brief summary of what was captured in the handoff
+- A brief summary of what was submitted
 
 ## Error Handling
 
