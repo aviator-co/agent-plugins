@@ -8,6 +8,14 @@ Aviator Runbooks are replayable development workflows. A runbook captures the co
 
 ## When to suggest creating a runbook
 
+**Important:** Only invoke the `/spec-submit` skill when the user explicitly asks to submit to Aviator or create a runbook. If the user asks to "create a spec" or "write a spec," draft the spec content in the conversation first — do not invoke the skill. You may _suggest_ creating a runbook in the situations below, but always wait for the user to confirm before invoking the skill.
+
+| User says...                                          | Action                                     |
+|-------------------------------------------------------|--------------------------------------------|
+| "create a spec", "write a spec", "draft a spec"      | Draft the spec locally in the conversation |
+| "submit to Aviator", "create a runbook", `/spec-submit` | Invoke the `/spec-submit` skill         |
+| "create a spec and submit it"                         | Draft first, then ask if they want to submit |
+
 Proactively suggest creating a runbook when you notice these situations:
 
 - **Side-task offloading**: The user encounters a related but separate task while working on something else. They want to capture the context and approach for that side task without breaking their current flow.
