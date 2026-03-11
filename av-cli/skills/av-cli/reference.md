@@ -192,7 +192,7 @@ av pr --reviewers alice,bob              # Add reviewers
 av pr --queue                            # Add to merge queue
 ```
 
-**Note:** For non-interactive execution (automation, scripts, or when used by agents), always pass `--title` and `--body` explicitly to avoid editor prompts.
+**Note:** When creating a new PR non-interactively, always pass `--title` and `--body` to avoid editor prompts. When the branch already has a PR, bare `av pr` simply pushes and syncs — no editor is opened, no flags needed.
 
 ### av pr-status
 

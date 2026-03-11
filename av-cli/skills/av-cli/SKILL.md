@@ -56,7 +56,8 @@ Many `av` commands default to interactive TUI prompts that agents cannot use. **
 | Command | Interactive behavior | Non-interactive flags |
 | --- | --- | --- |
 | `av sync` | Prompts for push and prune confirmation | `--push=yes` (or `=no`), `--prune=yes` (or `=no`) |
-| `av pr` | Opens editor for title/body | `--title "..." --body "..."` |
+| `av pr` (new PR) | Opens editor for title/body | `--title "..." --body "..."` |
+| `av pr` (existing PR) | No prompt — just pushes | No flags needed; bare `av pr` works |
 | `av switch` (no args) | Opens branch picker | `av switch <branch-name>` |
 | `av adopt` (no args) | Interactive branch selection | `av adopt --parent <parent>` on the target branch |
 | `av split-commit` | Interactive chunk picker | **No non-interactive mode.** Use `git reset` + manual staging instead |
@@ -65,9 +66,17 @@ Many `av` commands default to interactive TUI prompts that agents cannot use. **
 **Recommended agent workflow:**
 
 ```bash
+# Creating a new PR:
 av commit -A -m "message"
-av pr --title "Title" --body "Body"  # pushes the branch and creates/updates the PR
-# av sync is only needed later to rebase the stack or push changes across multiple branches
+av pr --title "Title" --body "Body"  # pushes the branch and creates the PR
+
+# Pushing updates to an existing PR (single branch, not in a stack):
+av commit -A -m "message"
+av pr  # no args needed — just pushes the branch and updates the PR, no editor prompt
+
+# Pushing updates when working in a stack (syncs the entire stack):
+av commit -A -m "message"
+av sync --push=yes --prune=yes
 ```
 
 ## Understanding Stack Structure
@@ -179,6 +188,8 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 
 - `git commit -m "message"` → use `av commit -m "message"` instead
 - `git push` → use `av pr` when creating a PR (it pushes automatically); use `av sync --push=yes --prune=yes` to push changes and rebase across the stack
+- `av pr --title "..." --body "..."` when PR already exists → just `av pr` (no args needed, no editor prompt)
+- `av sync --push=yes --prune=yes` just to push a single standalone branch → use `av pr` instead (but `av sync` is correct when working in a stack)
 - `av commit --amend --no-edit` → just `av commit --amend` (no-edit is the default, the flag doesn't exist)
 - `av sync` before/after `av pr` → unnecessary; `av pr` pushes on its own
 
@@ -194,7 +205,7 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 
 **`av pr` automatically pushes** the current branch to the remote before creating or updating the PR. No prior `av sync` or `git push` is needed.
 
-**Note:** Always pass `--title` and `--body` flags explicitly to avoid interactive prompts.
+**Note:** Pass `--title` and `--body` when creating a new PR to avoid editor prompts. When the branch already has a PR, bare `av pr` just pushes — no editor, no prompt.
 
 ### Synchronization
 
@@ -246,7 +257,8 @@ Once a repo is av-initialized, **use av for everything** - even single PRs. av w
 | ------------------------------ | --------------------------------------------------------- |
 | Create a branch                | `av branch <name>`                                        |
 | Commit changes                 | `av commit -m "message"`                                  |
-| Create/update a PR             | `av pr --title "Title" --body "Description"`              |
+| Create a new PR                | `av pr --title "Title" --body "Description"`              |
+| Push updates (single branch)   | `av pr`                                                   |
 | Create PRs for part of a stack | `av pr --all --current`                                   |
 | Create PRs for entire stack    | `av pr --all`                                             |
 | Sync after making changes      | `av sync --push=yes --prune=yes`                           |
@@ -255,7 +267,7 @@ Once a repo is av-initialized, **use av for everything** - even single PRs. av w
 | Switch branches                | `av switch <branch>`                                      |
 | View diff against parent       | `av diff`                                                 |
 
-**`av pr` vs `av sync`:** `av pr` pushes the current branch and creates/updates its PR — no separate push step needed. `av sync` fetches, rebases, and pushes across the entire stack. Use `av sync` for stack-wide rebase/push or cleanup after merges.
+**`av pr` vs `av sync`:** `av pr` pushes the current branch and creates/updates its PR — it's the simplest way to push a single standalone branch. `av sync` fetches, rebases, and pushes across the entire stack — use it when working in a stack so all branches stay in sync, and for cleanup after merges.
 
 ## Important Behaviors
 

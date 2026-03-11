@@ -497,16 +497,25 @@ When using av in scripts, automation, or as an agent — avoid all interactive p
 **Critical:** Flag values use `=` syntax. `--push=yes` works; `--push yes` does NOT.
 
 ```bash
-# Create PR without editor prompts — always pass --title and --body
+# Create a new PR — pass --title and --body to avoid editor prompts
 av pr --title "Add new feature" --body "This PR adds X, Y, and Z"
 
-# Sync without confirmation prompts
+# Push updates to an existing PR (single branch) — no args needed, no editor prompt
+av commit -A -m "fix edge case"
+av pr
+
+# Push updates when working in a stack — syncs the entire stack
+av commit -A -m "fix edge case"
 av sync --push=yes --prune=yes
 
 # Full automated workflow: commit and create PR (av pr pushes automatically)
 av commit -A -m "Add feature"
 av pr --title "Add feature" --body "Implementation details"
-# Use av sync later to rebase or push changes across the stack
+# Later, push updates to the same PR:
+av commit -A -m "address review feedback"
+av pr  # single branch: just pushes, no title/body needed
+# Or if in a stack:
+av sync --push=yes --prune=yes  # syncs the whole stack
 
 # Adopt a branch non-interactively (avoid bare `av adopt` which opens a picker)
 av switch some-branch
@@ -530,7 +539,8 @@ av commit --amend -a
 | Command | Non-interactive flag(s) |
 | --- | --- |
 | `av sync` | `--push=yes` / `--push=no`, `--prune=yes` / `--prune=yes` |
-| `av pr` | `--title "..."`, `--body "..."` |
+| `av pr` (new PR) | `--title "..."`, `--body "..."` |
+| `av pr` (existing PR) | No flags needed — bare `av pr` just pushes |
 | `av switch` | Pass branch name as argument |
 | `av adopt` | `--parent <parent>` |
 | `av commit --amend` | Default behavior (no `--no-edit` needed) |
@@ -540,7 +550,7 @@ av commit --amend -a
 | Workflow          | Commands                                                                    |
 | ----------------- | --------------------------------------------------------------------------- |
 | New feature stack | `av branch` → edit → `av commit -A -m "msg"` → `av pr --title "X" --body "Y"` |
-| Update mid-stack  | edit → `av commit -a -m "msg"` → `av sync --push=yes --prune=yes`            |
+| Update mid-stack  | edit → `av commit -a -m "msg"` → `av pr` (single branch) or `av sync --push=yes --prune=yes` (whole stack) |
 | PR merged         | `av sync --all --push=no --prune=yes`                                      |
 | Need latest main  | `av sync --rebase-to-trunk --push=yes --prune=yes`                           |
 | Resolve conflicts | fix files → `git add` → `av sync --continue`                                |
