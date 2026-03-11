@@ -85,7 +85,7 @@ Connects Claude Code to [Aviator Runbooks](https://aviator.co/runbooks) via MCP 
 
 **Usage:**
 
-Use `/aviator runbook` to create a runbook from your current session.
+Use `/spec-submit` to submit a spec and create a runbook from your current session.
 
 **Requirements:**
 

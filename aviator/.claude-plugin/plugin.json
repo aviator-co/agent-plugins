@@ -8,5 +8,5 @@
   "homepage": "https://aviator.co",
   "repository": "https://github.com/aviator-co/agent-plugins",
   "license": "MIT",
-  "keywords": ["runbooks", "aviator", "handoff", "spec-driven", "spec-driven-development"]
+  "keywords": ["runbooks", "aviator", "spec-driven", "spec-driven-development"]
 }
