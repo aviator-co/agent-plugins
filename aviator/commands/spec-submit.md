@@ -12,22 +12,7 @@ $ARGUMENTS - Optional additional context or instructions for the runbook
 
 ## Steps
 
-### Step 1: Detect Repository
-
-Determine the current repository:
-```bash
-git remote get-url origin
-```
-
-Extract the repository name in `owner/repo` format from the git remote URL. The host may be `github.com` or a self-hosted GitHub Enterprise instance. Handle common formats:
-- SSH: `git@github.com:owner/repo.git` → `owner/repo`
-- SSH (GHE): `git@github.mycompany.com:owner/repo.git` → `owner/repo`
-- HTTPS: `https://github.com/owner/repo.git` → `owner/repo`
-- HTTPS (GHE): `https://github.mycompany.com/owner/repo` → `owner/repo`
-
-Strip any trailing `.git` suffix and ignore the hostname — only extract the `owner/repo` path.
-
-### Step 2: Generate Message + Spec
+### Step 1: Generate Message + Spec
 
 Generate two artifacts from the session context:
 
@@ -72,11 +57,11 @@ Adapt sections to fit the task — not every section is needed, and you can add 
 
 Only generate a spec file if there's enough substance. A simple bug fix or single-line change doesn't need one — the message alone is sufficient.
 
-### Step 3: Confirm with User
+### Step 2: Confirm with User
 
 Before creating the runbook, show the user the message and the spec file (if one was generated). Ask them to confirm everything looks right. They may want to adjust the scope, add details, or remove sections.
 
-### Step 4: Create Runbook
+### Step 3: Create Runbook
 
 Use the `specSubmit` MCP tool from the Aviator server with:
 - `repo_name`: The repository in `owner/repo` format
@@ -85,7 +70,7 @@ Use the `specSubmit` MCP tool from the Aviator server with:
 
 The tool will return the runbook URL.
 
-### Step 5: Return Link
+### Step 4: Return Link
 
 Provide the user with:
 - The Runbook URL from the tool response
