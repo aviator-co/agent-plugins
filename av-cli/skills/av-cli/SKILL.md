@@ -1,6 +1,6 @@
 ---
 name: av-cli
-description: Use Aviator's av CLI for stacked PR workflows when a repo is av-initialized (detect .git/av.db). Apply when creating or updating stacked branches/PRs, restacking, reparenting, or visualizing a stack.
+description: Use Aviator's av CLI for git branch and PR workflows in repos with .git/av/av.db. Applies to creating branches, committing, pushing, creating/updating PRs (single or stacked), syncing, rebasing, adopting branches, and navigating between branches. Use av instead of raw git commit/push/rebase in av-initialized repos.
 allowed-tools:
   - Bash(av *)
   - Bash(git *)
@@ -11,9 +11,9 @@ allowed-tools:
   - Glob
 ---
 
-# Aviator CLI (av) for Stacked PRs
+# Aviator CLI (av)
 
-You are helping the user work with stacked pull requests using Aviator's `av` CLI tool.
+You are helping the user work with branches and pull requests using Aviator's `av` CLI tool.
 
 **IMPORTANT: NEVER modify the `av/av.db` file inside the git dir (found via `git rev-parse --git-common-dir`) directly.** This JSON file is managed by `av` commands. You may read it to understand stack structure, but always use `av` CLI commands to make changes.
 
@@ -35,7 +35,7 @@ cat <git-common-dir>/av/av.db
 
 **Tip:** Use `git branch --show-current` to identify the current branch, then look up that branch's entry in av.db for its stack context and PR info.
 
-**Do NOT use `av tree` to understand structure** - its visual output is misleading. Only use av.db.
+**Do NOT use `av tree` to understand structure** - its visual output looks garbled in the CLI. Read av.db and construct your own mental model of the stack from the parent relationships.
 
 ## Critical Rules
 
@@ -76,6 +76,10 @@ Many `av` commands default to interactive TUI prompts that agents cannot use. **
 av commit -A -m "message"
 av pr --title "Title" --body "Body"  # pushes the branch and creates the PR
 
+# Creating a new PR with no body:
+av commit -A -m "message"
+av pr --title "Title" --body ""  # pass --body '' to avoid editor prompt
+
 # Pushing updates to an existing PR (single branch, not in a stack):
 av commit -A -m "message"
 av pr  # no args needed — just pushes the branch and updates the PR, no editor prompt
@@ -86,6 +90,8 @@ av sync --push=yes --prune=yes
 ```
 
 ## Understanding Stack Structure
+
+A stack is a chain of dependent branches where each branch builds on the previous one. Each gets its own PR showing only its diff relative to its parent. av handles rebasing across the chain automatically.
 
 Run `git rev-parse --git-common-dir`, then `cat <result>/av/av.db` to understand branch relationships. Format:
 
@@ -116,136 +122,60 @@ Run `git rev-parse --git-common-dir`, then `cat <result>/av/av.db` to understand
 
 **Reading the structure:** Each branch's `parent.name` tells you what it's based on. Build the tree by following parent relationships. Branches with `trunk: true` are all independent roots.
 
-## Core Concepts
+## What Are You Trying To Do?
 
-### What is a Stack?
+### Branch & commit operations
 
-A **stack** is a chain of dependent branches where each branch builds on the previous one:
+| Task | Command |
+| --- | --- |
+| Create a new branch | `av branch <name>` |
+| Create a branch from a specific parent | `av branch --parent <parent> <name>` |
+| Commit all changes | `av commit -A -m "message"` |
+| Commit only tracked files | `av commit -a -m "message"` |
+| Commit specific files | `git add <files>` then `av commit -m "message"` |
+| Amend last commit | `av commit --amend` (no `--no-edit` flag — it's the default) |
+| Amend and change message | `av commit --amend --edit` |
+| Squash branch commits | `av squash` |
+| Rename current branch | `av branch -m <new-name>` |
+| Move branch to different parent | `av reparent --parent <new-parent>` |
+| Adopt an unmanaged branch | `av switch <branch>` then `av adopt --parent <parent>` |
+| Adopt a remote branch | `av adopt --remote origin/<branch>` |
+| Remove branch from av | `av orphan` |
 
-```
-main
- └── feature-auth (PR #1: adds auth)
-      └── feature-login (PR #2: adds login, depends on auth)
-           └── feature-logout (PR #3: adds logout, depends on login)
-```
+### PR operations
 
-### Why Use av?
+| Task | Command |
+| --- | --- |
+| Create a new PR | `av pr --title "Title" --body "Body"` |
+| Create a new PR with no body | `av pr --title "Title" --body ""` |
+| Push updates to existing PR | `av pr` (no args — just pushes, no editor) |
+| Create PRs for entire stack | `av pr --all` |
+| Create PRs up to current branch | `av pr --all --current` |
+| Create draft PR | `av pr --draft --title "Title" --body ""` |
 
-1. **Automatic rebasing**: When you update a branch mid-stack, `av` rebases all child branches.
-2. **Correct PR bases**: `av pr` automatically sets the correct base branch (parent branch, not trunk).
-3. **Coordinated syncing**: `av sync` fetches, rebases, and pushes all branches in one command.
+### Syncing & pushing
 
-### How Stacked PRs Work
-
-Each PR shows only its own diff (changes relative to its parent branch), not the cumulative diff against trunk. This makes code review focused and manageable.
-
-### Common Use Case: Full-Stack Features
-
-The most common workflow is building features that span multiple layers:
-
-```
-main
- └── add-feature-db       (DB schema/migrations)
-      └── add-feature-service  (Backend service logic)
-           └── add-feature-api      (REST/GraphQL endpoints)
-                └── add-feature-ui       (Frontend components)
-```
-
-Each layer gets its own focused PR. Reviewers with different expertise (DBA, backend, frontend) review the relevant parts. When the DB schema changes during review, `av sync` propagates updates through the entire stack automatically.
-
-## Essential Commands
-
-### Branch Management
-
-| Command                              | Purpose                                                  |
-| ------------------------------------ | -------------------------------------------------------- |
-| `av branch <name>`                   | Create a new branch stacked on current branch            |
-| `av branch --parent <parent> <name>` | Create branch with specific parent                       |
-| `av branch -m <new-name>`            | Rename current branch                                    |
-| `av adopt --parent <parent>`         | Adopt current branch into the stack with given parent    |
-| `av adopt --remote <branch>`         | Fetch and adopt a remote branch (e.g., colleague's work) |
-| `av reparent --parent <new-parent>`  | Move current branch to a different parent                |
-| `av orphan`                          | Remove current branch from av management                 |
-
-**`av adopt --remote` is particularly useful** for pulling in a colleague's branch (or any remote branch not yet tracked locally) and automatically setting up the correct stack relationships. It fetches the branch, detects its parent chain, and integrates it into your local av state — much more reliable than manually checking out and adopting.
-
-### Committing
-
-| Command                     | Purpose                                          |
-| --------------------------- | ------------------------------------------------ |
-| `av commit -m "message"`    | Commit and auto-restack children                 |
-| `av commit -a -m "message"` | Stage modified files and commit                  |
-| `av commit -A -m "message"` | Stage ALL files (including untracked) and commit |
-| `git add <files> && av commit -m "msg"` | Stage specific files, then commit |
-| `av commit --amend`         | Amend last commit, then restack children         |
-| `av split-commit`           | Interactively split current commit (no non-interactive mode) |
-| `av squash`                 | Squash all branch commits into one               |
-
-**`av commit` vs `git commit` — key differences:**
-
-- `--amend` reuses the existing message by default. There is no `--no-edit` flag — it is the default behavior.
-- `--edit` explicitly opens the editor when amending (the opposite default from git).
-- `-a` behaves the same as git's `-a` (stages modified/deleted tracked files only).
-- `-A` / `--all-changes` is av-specific: stages ALL files including untracked (git has no equivalent single flag).
-
-**Selective staging:** `-a` and `-A` stage everything (tracked or all). To commit only specific files, stage them first with `git add <files>`, then run `av commit` without `-a`/`-A`. This works for both new commits and amends.
-
-**Common mistakes:**
-
-- `git commit -m "message"` → use `av commit -m "message"` instead
-- `git push` → use `av pr` when creating a PR (it pushes automatically); use `av sync --push=yes --prune=yes` to push changes and rebase across the stack
-- `av pr --title "..." --body "..."` when PR already exists → just `av pr` (no args needed, no editor prompt)
-- `av sync --push=yes --prune=yes` just to push a single standalone branch → use `av pr` instead (but `av sync` is correct when working in a stack)
-- `av commit --amend --no-edit` → just `av commit --amend` (no-edit is the default, the flag doesn't exist)
-- `av sync` before/after `av pr` → unnecessary; `av pr` pushes on its own
-
-### Pull Requests
-
-| Command                                        | Purpose                                |
-| ---------------------------------------------- | -------------------------------------- |
-| `av pr --title "Title" --body "Description"`   | Create/update PR for current branch    |
-| `av pr --all`                                  | Create/update PRs for entire stack     |
-| `av pr --all --current`                        | Create/update PRs up to current branch |
-| `av pr --draft`                                | Create PR as draft                     |
-| `av pr --edit`                                 | Edit existing PR title/body            |
-
-**`av pr` automatically pushes** the current branch to the remote before creating or updating the PR. No prior `av sync` or `git push` is needed.
-
-**Note:** Pass `--title` and `--body` when creating a new PR to avoid editor prompts. When the branch already has a PR, bare `av pr` just pushes — no editor, no prompt.
-
-### Synchronization
-
-| Command                           | Purpose                             |
-| --------------------------------- | ----------------------------------- |
-| `av sync`                         | Fetch, restack current stack, push  |
-| `av sync --rebase-to-trunk`       | Rebase stack root onto latest trunk |
-| `av sync --all --rebase-to-trunk` | Rebase all stacks onto latest trunk |
-| `av restack`                      | Rebase children locally (no push)   |
-| `av fetch`                        | Fetch latest state from GitHub      |
-
-**Non-interactive mode:** `av sync` prompts for confirmation by default. Use explicit flags (note the `=` syntax — a space does not work):
-
-```bash
-av sync --push=yes --prune=yes          # Sync current stack
-av sync --all --push=no --prune=yes     # Sync all stacks (use after PRs are merged, ask user before pushing)
-```
-
-Both `--push` and `--prune` must always be specified — omitting either triggers a TUI prompt. Options: `yes`, `no`, or `ask` (default). `--prune=yes` is safe in most cases — it only deletes local branches whose PRs have already been merged. Use `--prune=no` if you need to keep merged branches around locally (e.g., for reference or if other worktrees have them checked out).
-
-**Timeout:** `av sync` performs a fetch + rebase + push cycle and can take 15-30+ seconds. Use a timeout of at least 60 seconds for any `av sync` command.
+| Task | Command |
+| --- | --- |
+| Push + sync entire stack | `av sync --push=yes --prune=yes` |
+| Push single branch (no stack) | `av pr` |
+| Rebase stack onto latest trunk | `av sync --rebase-to-trunk --push=yes --prune=yes` |
+| After a PR is merged | `av sync --all --push=no --prune=yes` |
+| Restack children locally (no push) | `av restack` |
+| Clean up stale av metadata | `av tidy` |
 
 ### Navigation
 
-| Command              | Purpose                     |
-| -------------------- | --------------------------- |
-| `av switch`          | Interactive branch switcher |
-| `av switch <branch>` | Switch to specific branch   |
-| `av next`            | Move to child branch        |
-| `av prev`            | Move to parent branch       |
-| `av next --last`     | Jump to end of stack        |
-| `av prev --first`    | Jump to stack root          |
+| Task | Command |
+| --- | --- |
+| Switch to a branch | `av switch <branch>` |
+| Go to child branch | `av next` |
+| Go to parent branch | `av prev` |
+| Jump to end of stack | `av next --last` |
+| Jump to stack root | `av prev --first` |
+| View diff against parent | `av diff` |
 
-### Conflict Resolution
+### Conflict resolution
 
 When rebasing causes conflicts:
 
@@ -255,31 +185,29 @@ When rebasing causes conflicts:
 
 Or abort with `--abort`, or skip the problematic commit with `--skip`.
 
-## Using av for All Workflows
+## When Plain Git Is Fine
 
-Once a repo is av-initialized, **use av for everything** - even single PRs. av works great for non-stacked workflows too and keeps things consistent.
+Use av for branch management, committing, and PR operations. Plain git is fine for read-only and staging operations:
 
-| Scenario                       | Command                                                   |
-| ------------------------------ | --------------------------------------------------------- |
-| Create a branch                | `av branch <name>`                                        |
-| Commit changes                 | `av commit -m "message"`                                  |
-| Create a new PR                | `av pr --title "Title" --body "Description"`              |
-| Push updates (single branch)   | `av pr`                                                   |
-| Create PRs for part of a stack | `av pr --all --current`                                   |
-| Create PRs for entire stack    | `av pr --all`                                             |
-| Sync after making changes      | `av sync --push=yes --prune=yes`                           |
-| After a PR is merged           | `av sync --all --push=no --prune=yes`                     |
-| Adopt a remote branch          | `av adopt --remote origin/<branch>`                       |
-| Switch branches                | `av switch <branch>`                                      |
-| View diff against parent       | `av diff`                                                 |
+- `git log`, `git diff`, `git status`, `git blame` — reading history/state
+- `git stash`, `git stash pop` — temporarily shelving changes
+- `git add <files>` — staging specific files before `av commit`
+- `git reset --soft HEAD~1` — undoing commits to restage (then use `av commit`)
 
-**`av pr` vs `av sync`:** `av pr` pushes the current branch and creates/updates its PR — it's the simplest way to push a single standalone branch. `av sync` fetches, rebases, and pushes across the entire stack — use it when working in a stack so all branches stay in sync, and for cleanup after merges.
+## Error Handling
+
+- **Sync conflicts**: resolve files, `git add`, then `av sync --continue` (or `--abort` / `--skip`)
+- **Auth failures**: run `av auth` to check login status; re-authenticate if needed
+- **Timeout**: `av sync` can take 15-30+ seconds (fetch + rebase + push). Use at least 60 second timeout.
+- **Dirty working tree during sync**: commit or stash changes before running `av sync`
+- **"branch not adopted" errors**: run `av adopt --parent <parent>` on the branch first
 
 ## Important Behaviors
 
-1. **Use av commands consistently** - they work for single PRs and stacks alike.
+1. **Use av for branch management, committing, and PR operations** — it works for single PRs and stacks alike.
 2. **`av commit` auto-restacks** child branches when you have them.
-3. **Let `av pr` set the base** - don't manually specify base branches.
+3. **Let `av pr` set the base** — don't manually specify base branches.
 4. **After PR merges**, run `av sync --all --push=no --prune=yes` to clean up and rebase remaining branches. Ask the user before pushing all stacks.
-5. **Don't mention stacks in commits/PRs** - never reference stack position, parent branches, or stack relationships in commit messages, PR titles, or PR bodies. The av tooling handles this metadata automatically.
-6. **Always show full PR URLs** - when displaying PR info, use the `permalink` field from av.db. Never show just "PR #123" - always show the full clickable URL like `https://github.com/org/repo/pull/123`.
+5. **Don't mention stacks in commits/PRs** — never reference stack position, parent branches, or stack relationships in commit messages, PR titles, or PR bodies. The av tooling handles this metadata automatically.
+6. **Always show full PR URLs** — when displaying PR info, use the `permalink` field from av.db. Never show just "PR #123" — always show the full clickable URL like `https://github.com/org/repo/pull/123`.
+7. **`av pr` vs `av sync`**: `av pr` pushes the current branch and creates/updates its PR — simplest for a single branch. `av sync` fetches, rebases, and pushes across the entire stack — use it when working in a stack or for cleanup after merges.

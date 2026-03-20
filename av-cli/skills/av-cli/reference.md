@@ -145,7 +145,7 @@ av split-commit
 
 Interactively prompts to distribute diff chunks into separate commits.
 
-**Interactive only** — there is no non-interactive mode. For agents, use `git reset HEAD~1` followed by manual staging and separate `av commit` calls instead.
+Interactive only — no non-interactive mode available.
 
 ### av squash
 
@@ -169,8 +169,8 @@ av pr [flags]
 
 **Flags:**
 
-- `-t <title>, --title=<title>` - PR title (recommended: always specify to avoid prompts)
-- `-b <body>, --body=<body>` - PR body (recommended: always specify to avoid prompts; use `--body -` for stdin)
+- `-t <title>, --title=<title>` - PR title
+- `-b <body>, --body=<body>` - PR body (use `--body -` for stdin)
 - `--draft` - Create as draft PR
 - `--edit` - Edit title/body of existing PR
 - `--force` - Force create even if PR exists
@@ -183,7 +183,7 @@ av pr [flags]
 **Examples:**
 
 ```bash
-av pr --title "Add login" --body "Implements login flow"  # Non-interactive (recommended)
+av pr --title "Add login" --body "Implements login flow"
 av pr                                    # Create PR, opens editor (interactive)
 av pr --draft --title "WIP" --body "Work in progress"
 av pr --all                              # PRs for whole stack
@@ -192,7 +192,7 @@ av pr --reviewers alice,bob              # Add reviewers
 av pr --queue                            # Add to merge queue
 ```
 
-**Note:** When creating a new PR non-interactively, always pass `--title` and `--body` to avoid editor prompts. When the branch already has a PR, bare `av pr` simply pushes and syncs — no editor is opened, no flags needed.
+**Note:** When the branch already has a PR, bare `av pr` simply pushes and syncs — no editor is opened.
 
 ### av pr-status
 
@@ -237,10 +237,7 @@ av sync --push=no --prune=yes       # Skip pushing entirely
 av sync --continue                  # Continue after conflict resolution
 ```
 
-**Non-interactive mode:** By default, `av sync` prompts for confirmation before pushing and before pruning merged branches. For automation or scripting, use explicit flags with `=` syntax (a space does not work):
-
-- `--push=(yes|no|ask)` — Control push behavior (default: ask). Example: `--push=yes`
-- `--prune=(yes|no|ask)` — Control pruning of merged branches (default: ask). Example: `--prune=yes`
+**Note:** By default, `av sync` prompts for push and prune confirmation. Use `=` syntax for flag values: `--push=yes`, `--prune=yes`.
 
 ### av restack
 
@@ -381,7 +378,7 @@ Interactively reorder the stack.
 av reorder [--continue | --abort]
 ```
 
-**Interactive only** — opens an editor and has no non-interactive mode. For agents, use `av reparent`, `av squash`, `git reset`, and manual `av commit` calls to achieve the same results.
+Interactive only — no non-interactive mode available.
 
 Like `git rebase -i` but across all branches in the stack. Can:
 

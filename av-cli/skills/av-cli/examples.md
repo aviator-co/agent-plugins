@@ -1,10 +1,10 @@
 # av Workflow Examples
 
-Practical examples for common stacked PR workflows.
+Practical examples for common workflows.
 
 ## Example 1: Full-Stack Feature Development
 
-The most common use case for stacked PRs: building a feature that spans multiple layers of your application. Each layer depends on the one below it, and each PR is reviewable independently.
+Building a feature that spans multiple layers of your application.
 
 ```bash
 # Start from main
@@ -15,28 +15,25 @@ git fetch
 av branch add-user-preferences-db
 # Add migration, update models
 av commit -A -m "Add user_preferences table and model"
-av pr -t "Add user preferences DB schema"
+av pr -t "Add user preferences DB schema" --body ""
 
 # Layer 2: Backend service logic
 av branch add-user-preferences-service
 # Implement service layer, business logic
 av commit -A -m "Add UserPreferencesService"
-av pr -t "Add user preferences service layer"
+av pr -t "Add user preferences service layer" --body ""
 
 # Layer 3: API/GraphQL endpoints
 av branch add-user-preferences-api
 # Add REST endpoints or GraphQL resolvers
 av commit -A -m "Add user preferences API endpoints"
-av pr -t "Add user preferences API"
+av pr -t "Add user preferences API" --body ""
 
 # Layer 4: Frontend UI
 av branch add-user-preferences-ui
 # Build the settings page, connect to API
 av commit -A -m "Add user preferences settings page"
-av pr -t "Add user preferences UI"
-
-# View the full stack
-av tree
+av pr -t "Add user preferences UI" --body ""
 ```
 
 **Result:**
@@ -49,51 +46,25 @@ av tree
                   └── add-user-preferences-ui (PR #4)
 ```
 
-**Why this works well:**
-
-- Each PR is focused and easy to review (~200-400 lines instead of 1000+)
-- Reviewers with different expertise review relevant layers (DBA reviews DB, frontend dev reviews UI)
-- PRs can be approved and merged incrementally as reviews complete
-- If DB schema needs changes during review, `av sync` propagates updates through the entire stack
-
 ## Example 2: Creating a Simple Stack
 
 Starting from main, create a stack of three dependent features.
 
 ```bash
-# Start from main
 av switch main
 git fetch
 
-# Create first branch in the stack
 av branch feature-auth
-# Make changes to add authentication
 av commit -A -m "Add authentication module"
-av pr -t "Add authentication" --draft
+av pr -t "Add authentication" --draft --body ""
 
-# Create second branch, stacked on feature-auth
 av branch feature-login
-# Make changes for login
 av commit -A -m "Add login page"
-av pr -t "Add login page" --draft
+av pr -t "Add login page" --draft --body ""
 
-# Create third branch, stacked on feature-login
 av branch feature-logout
-# Make changes for logout
 av commit -A -m "Add logout functionality"
-av pr -t "Add logout" --draft
-
-# View the stack
-av tree
-```
-
-**Result:**
-
-```
-  main
-   └── feature-auth (PR #1 - draft)
-        └── feature-login (PR #2 - draft)
-             └── feature-logout (PR #3 - draft)
+av pr -t "Add logout" --draft --body ""
 ```
 
 ## Example 3: Creating PRs for Entire Stack at Once
@@ -101,7 +72,6 @@ av tree
 Build the stack locally, then create all PRs together.
 
 ```bash
-# Create branches and commits first (no PRs yet)
 av branch feature-api
 # make changes
 av commit -A -m "Add API endpoints"
@@ -127,14 +97,7 @@ av pr --all --current  # Only creates PR for feature-api
 When you need to make changes to a branch that has children.
 
 ```bash
-# View current stack
-av tree
-#   main
-#    └── feature-api * (PR #1)
-#         └── feature-tests (PR #2)
-
 # You're on feature-api, make more changes
-# edit files...
 av commit -a -m "Fix API response format"
 # av automatically restacks feature-tests onto the new commit
 
@@ -144,23 +107,16 @@ av sync --push=yes --prune=yes
 
 ## Example 5: After a PR is Merged
 
-When a PR in your stack gets merged to main.
+When a PR in your stack gets merged (including squash-merges).
 
 ```bash
 # feature-auth was merged to main
 av sync --all --push=no --prune=yes
 # This will:
 # 1. Fetch latest main (with merged feature-auth)
-# 2. Detect that feature-auth was merged
-# 3. Prompt to delete the local feature-auth branch
+# 2. Detect that feature-auth was merged (works for squash-merges too)
+# 3. Delete the local feature-auth branch
 # 4. Rebase feature-login onto main
-# 5. Push updated branches
-
-# View updated stack
-av tree
-#   main
-#    └── feature-login (PR #2 - base updated to main)
-#         └── feature-logout (PR #3)
 ```
 
 ## Example 6: Resolving Rebase Conflicts
@@ -187,10 +143,9 @@ av sync --skip
 
 ## Example 7: Reorganizing a Stack with Reorder
 
-Move commits between branches or reorder branches.
+Move commits between branches or reorder branches (interactive only).
 
 ```bash
-# Start interactive reorder
 av reorder
 
 # Editor opens with something like:
@@ -207,7 +162,6 @@ av reorder
 # - Move commits between branches
 # - Reorder entire branches
 
-# Save and close editor to apply changes
 # If conflicts occur:
 av reorder --continue  # after resolving
 av reorder --abort     # to cancel
@@ -218,18 +172,7 @@ av reorder --abort     # to cancel
 Bring existing git branches into av management.
 
 ```bash
-# You have branches created with git (not av)
-git branch
-# * main
-#   old-feature
-#   old-feature-part2
-
-# Adopt them into av
-av adopt
-# Interactive prompt shows detected branches
-# Select which to adopt
-
-# Or adopt current branch with specific parent
+# Adopt current branch with specific parent
 av switch old-feature
 av adopt --parent main
 
@@ -242,153 +185,94 @@ av adopt --remote origin/colleague-feature
 Use `av adopt --remote` to fetch and work on branches from teammates.
 
 ```bash
-# Colleague asks you to review or continue their work
-# Their stack exists on origin but not locally
-
-# Adopt their entire stack from the remote
+# Adopt their stack from the remote
 av adopt --remote origin/alice/feature-api
 
 # av fetches the branch and its parent chain
-# Prompts you to select which branches to adopt
 # Sets up the stack structure locally
 
-# Now you can:
-av tree                    # See the adopted stack
-av switch alice/feature-api  # Work on it
+# Now you can work on it
+av switch alice/feature-api
 av commit -a -m "Address review feedback"
-av sync --push=yes --prune=yes  # Push your changes
+av sync --push=yes --prune=yes
 ```
-
-This is useful for:
-
-- Picking up a colleague's work while they're out
-- Collaborating on the same stack
-- Reviewing PRs locally with full stack context
 
 ## Example 10: Splitting a Large Commit
 
-Break up a commit that's too big.
+Break up a commit that's too big (interactive only).
 
 ```bash
-# You're on a branch with one large commit
 av split-commit
 
 # Interactive prompt shows diff chunks
 # Select which chunks go in the first commit
 # Provide commit message
 # Repeat until all chunks are distributed
-
-# Children branches are automatically restacked
 ```
 
 ## Example 11: Moving Changes Between Stack Layers
-
-When you need to move committed changes from one branch to another in the stack — for example, you committed on the wrong branch, or you need to split work differently.
 
 **Scenario A: Move the last commit from a child branch to its parent**
 
 ```bash
 # You're on feature-ui and realize the last commit belongs on feature-api (parent)
-
-# 1. Soft-reset to undo the commit but keep changes staged
 git reset --soft HEAD~1
-
-# 2. Stash the changes
 git stash
-
-# 3. Switch to the parent branch
 av switch feature-api
-
-# 4. Apply the stashed changes and amend (or create a new commit)
 git stash pop
 av commit --amend -a
-
-# 5. The amend automatically restacks children, so switch back
 av switch feature-ui
 ```
 
 **Scenario B: Move unstaged/working changes to a different branch**
 
 ```bash
-# You've been editing on the wrong branch
 git stash
 av switch correct-branch
 git stash pop
-# Now commit on the correct branch
 av commit -A -m "Add feature"
 ```
 
 **Scenario C: Split a branch's commits across parent and child**
 
 ```bash
-# You're on feature-api with commits that should be split:
-# some belong here, others belong on the child feature-ui
-
-# 1. Soft-reset all commits on this branch
-git reset --soft $(git merge-base HEAD feature-api@{upstream} 2>/dev/null || av prev --first && git merge-base HEAD main)
-
-# Simpler: if you know how many commits to undo
+# Soft-reset all commits on this branch
 git reset --soft HEAD~3
 
-# 2. Stage and commit only what belongs on this branch
+# Stage and commit only what belongs on this branch
 git add src/api/
 av commit -m "Add API endpoints"
 
-# 3. Stash the remaining changes
+# Stash the remaining changes and move to child
 git stash
-
-# 4. Move to the child branch and apply
 av switch feature-ui
 git stash pop
 av commit --amend -a
 
-# 5. Sync to push everything
+# Sync to push everything
 av sync --push=yes --prune=yes
 ```
 
 ## Example 12: Working with Draft PRs
 
-Create draft PRs and convert them when ready.
-
 ```bash
 # Create as draft
-av pr --draft -t "WIP: New feature"
+av pr --draft -t "WIP: New feature" --body ""
 
-# Later, when ready for review
-av pr --edit
-# This opens editor - remove [draft] or update as needed
-
-# Or use GitHub UI / gh cli to convert from draft
+# Later, when ready for review — use GitHub UI or gh cli to convert from draft
 ```
 
 ## Example 13: Rebasing Stack onto Latest Main
 
-When you need to incorporate latest changes from main.
-
 ```bash
-# Your stack is based on an older main
 av sync --rebase-to-trunk --push=yes --prune=yes
-
-# This rebases the stack root onto latest main
-# Then restacks all child branches
-# Then pushes everything
-
-# Tip: Do this when:
-# - main has changes you need
-# - CI requires up-to-date base
-# - Resolving conflicts preemptively
 ```
 
 ## Example 14: Navigating a Stack
 
-Moving between branches in your stack.
-
 ```bash
-# View the full tree
-av tree
-
-# Interactive branch picker
-av switch
+# Read av.db to understand the stack structure
+cat "$(git rev-parse --git-common-dir)/av/av.db"
 
 # Direct navigation
 av next          # Go to child branch
@@ -404,20 +288,13 @@ av switch https://github.com/org/repo/pull/123
 
 ## Example 15: Amending a Commit
 
-Fix the last commit without creating a new one.
-
 ```bash
-# Make additional changes
-# edit files...
-
 # Amend the last commit (stages all modified tracked files)
 av commit --amend -a
 
-# Amend with only specific files (don't stage everything)
+# Amend with only specific files
 git add src/api.js src/utils.js
 av commit --amend
-
-# This amends the commit and restacks children
 
 # To also change the commit message:
 av commit --amend --edit -a
@@ -425,48 +302,19 @@ av commit --amend --edit -a
 
 ## Example 16: Creating a Branch from a Different Parent
 
-When you want to branch from somewhere other than current branch.
-
 ```bash
 # Currently on feature-login, but want to branch from main
 av branch --parent main hotfix-urgent
-
-# Or create a branch + commit in one step from specific parent
-av commit --parent main --branch-name hotfix-urgent -A -m "Urgent fix"
 ```
 
 ## Example 17: Squashing Branch Commits
 
-Combine multiple commits on a branch into one.
-
 ```bash
-# On a branch with multiple commits
-git log --oneline
-# abc123 Fix typo
-# def456 Address review feedback
-# 789ghi Add feature
-
-# Squash into single commit
 av squash
-
-# All commits combined, children restacked
+# All commits on the branch combined into one, children restacked
 ```
 
-## Example 18: Handling a Flattened PR
-
-When a PR's parent was squash-merged.
-
-```bash
-# After parent PR was squash-merged, sync to fix the stack
-av sync --all --push=no --prune=yes
-
-# av detects the squash merge and rebases your branch
-# onto the correct commit on main
-```
-
-## Example 19: Setting Up a Worktree for av
-
-When working on multiple features simultaneously, use git worktrees with av.
+## Example 18: Setting Up a Worktree for av
 
 ```bash
 # From your main repo, create a worktree and navigate to it
@@ -475,84 +323,6 @@ cd <path>
 
 # Create your first branch (no av init needed - worktrees share .git)
 av branch feature-name
-
-# Now you can work independently in this worktree
-# The main repo remains on its original branch
 ```
 
-**Why use worktrees:**
-- Work on multiple stacks simultaneously without switching branches
-- Keep your main working directory clean while experimenting
-
-**Important considerations:**
-- Worktrees share the same `.git` directory, so av state (`.git/av/av.db`) is shared across all worktrees
-- Running `av sync --all` in one worktree will rebase/push branches that may be checked out in other worktrees
-- Avoid having the same branch checked out in multiple worktrees simultaneously
-- Each worktree should ideally work on a separate stack to avoid conflicts
-
-## Example 20: Non-Interactive Automation
-
-When using av in scripts, automation, or as an agent — avoid all interactive prompts. Every TUI prompt is a blocker for non-human users.
-
-**Critical:** Flag values use `=` syntax. `--push=yes` works; `--push yes` does NOT.
-
-```bash
-# Create a new PR — pass --title and --body to avoid editor prompts
-av pr --title "Add new feature" --body "This PR adds X, Y, and Z"
-
-# Push updates to an existing PR (single branch) — no args needed, no editor prompt
-av commit -A -m "fix edge case"
-av pr
-
-# Push updates when working in a stack — syncs the entire stack
-av commit -A -m "fix edge case"
-av sync --push=yes --prune=yes
-
-# Full automated workflow: commit and create PR (av pr pushes automatically)
-av commit -A -m "Add feature"
-av pr --title "Add feature" --body "Implementation details"
-# Later, push updates to the same PR:
-av commit -A -m "address review feedback"
-av pr  # single branch: just pushes, no title/body needed
-# Or if in a stack:
-av sync --push=yes --prune=yes  # syncs the whole stack
-
-# Adopt a branch non-interactively (avoid bare `av adopt` which opens a picker)
-av switch some-branch
-av adopt --parent main
-
-# Switch branches by name (avoid bare `av switch` which opens a picker)
-av switch feature-login
-
-# Amend without editor (av reuses message by default — no --no-edit flag needed)
-av commit --amend -a
-```
-
-**Commands with no non-interactive mode (avoid in automation):**
-- `av split-commit` — use `git reset HEAD~1` + manual staging + `av commit` instead
-- `av reorder` — use `av reparent`, `av squash`, `git reset`, and `av commit` instead
-- `av switch` (no args) — always pass a branch name
-- `av adopt` (no args) — always pass `--parent`
-
-**All non-interactive flags at a glance:**
-
-| Command | Non-interactive flag(s) |
-| --- | --- |
-| `av sync` | `--push=yes` / `--push=no`, `--prune=yes` / `--prune=yes` |
-| `av pr` (new PR) | `--title "..."`, `--body "..."` |
-| `av pr` (existing PR) | No flags needed — bare `av pr` just pushes |
-| `av switch` | Pass branch name as argument |
-| `av adopt` | `--parent <parent>` |
-| `av commit --amend` | Default behavior (no `--no-edit` needed) |
-
-## Quick Reference: Common Workflows
-
-| Workflow          | Commands                                                                    |
-| ----------------- | --------------------------------------------------------------------------- |
-| New feature stack | `av branch` → edit → `av commit -A -m "msg"` → `av pr --title "X" --body "Y"` |
-| Update mid-stack  | edit → `av commit -a -m "msg"` → `av pr` (single branch) or `av sync --push=yes --prune=yes` (whole stack) |
-| PR merged         | `av sync --all --push=no --prune=yes`                                      |
-| Need latest main  | `av sync --rebase-to-trunk --push=yes --prune=yes`                           |
-| Resolve conflicts | fix files → `git add` → `av sync --continue`                                |
-| View stack        | `av tree`                                                                   |
-| Navigate          | `av next`, `av prev`, `av switch`                                           |
+**Important:** Worktrees share `.git/av/av.db`. Running `av sync --all` in one worktree affects branches in other worktrees. Keep separate stacks per worktree and avoid checking out the same branch in multiple worktrees.
