@@ -22,10 +22,16 @@ You are helping the user work with stacked pull requests using Aviator's `av` CL
 When working with av, **ALWAYS read `av/av.db` from the git common dir first** to understand the branch structure. This JSON file is the source of truth.
 
 ```bash
-cat "$(git rev-parse --git-common-dir)/av/av.db"
+git rev-parse --git-common-dir
 ```
 
-**Note:** Use `cat`, not the Read tool - the `.db` extension causes Read to incorrectly treat it as binary.
+Then use the result to read the db file:
+
+```bash
+cat <git-common-dir>/av/av.db
+```
+
+**IMPORTANT: Always use `cat` to read av.db, NEVER the Read tool.** The `.db` extension causes Read to incorrectly treat it as binary.
 
 **Tip:** Use `git branch --show-current` to identify the current branch, then look up that branch's entry in av.db for its stack context and PR info.
 
@@ -39,7 +45,7 @@ cat "$(git rev-parse --git-common-dir)/av/av.db"
 
 ## Detection & Setup
 
-**Check if av is initialized**: `test -f "$(git rev-parse --git-common-dir)/av/av.db"`
+**Check if av is initialized**: run `git rev-parse --git-common-dir`, then `test -f <git-common-dir>/av/av.db`
 
 - If the file exists, the repo is av-initialized. Use `av` commands for branch/PR operations.
 - If the file does NOT exist, ask the user if they want to initialize with `av init`.
@@ -81,7 +87,7 @@ av sync --push=yes --prune=yes
 
 ## Understanding Stack Structure
 
-Read `"$(git rev-parse --git-common-dir)/av/av.db"` to understand branch relationships. Format:
+Run `git rev-parse --git-common-dir`, then `cat <result>/av/av.db` to understand branch relationships. Format:
 
 ```json
 {
