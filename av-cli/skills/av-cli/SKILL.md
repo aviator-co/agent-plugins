@@ -1,6 +1,6 @@
 ---
 name: av-cli
-description: Use Aviator's av CLI for stacked PR workflows when a repo is av-initialized (detect .git/av.db). Apply when creating or updating stacked branches/PRs, restacking, reparenting, or visualizing a stack.
+description: Use Aviator's av CLI for stacked PR workflows when a repo is av-initialized (detect .git/av/av.db). Apply when creating or updating stacked branches/PRs, restacking, reparenting, or visualizing a stack.
 allowed-tools:
   - Bash(av *)
   - Bash(git *)
