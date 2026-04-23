@@ -1,0 +1,16 @@
+[project]
+name = "aviator-plugin-evals"
+version = "0.1.0"
+description = "Eval suite for the Aviator Claude Code plugin (tests AC generation in /spec-submit)"
+requires-python = ">=3.11"
+dependencies = [
+  "anthropic>=0.89.0",
+  "pytest>=8.0.0",
+  "python-dotenv>=1.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "eval: mark test as an eval (skipped by default; requires --run-evals / --run-evals-quick / --run-evals-deep and ANTHROPIC_API_KEY)",
+]
