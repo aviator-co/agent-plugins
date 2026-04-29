@@ -57,11 +57,21 @@ Adapt sections to fit the task — not every section is needed, and you can add 
 
 Only generate a spec file if there's enough substance. A simple bug fix or single-line change doesn't need one — the message alone is sufficient.
 
-### Step 2: Confirm with User
+### Step 2: Review Acceptance Criteria with User — Iterate Until Aligned
 
-Before creating the runbook, show the user the message and the spec file (if one was generated). Ask them to confirm everything looks right. They may want to adjust the scope, add details, or remove sections.
+Before submitting, show the user **only the Acceptance Criteria** for review. Do not dump the full spec body (Intent / Scope / Steps) into the chat — the spec is generated and will be submitted, but it's supporting context, not what the user is being asked to confirm. You may include the one-line message above the AC for grounding, but nothing more. If the user wants to see the spec body, they'll ask — show it then. Otherwise, keep the review focused on AC alone.
+
+**On the first showing of AC in this flow, preface it with a one-line primer** so users unfamiliar with the term know what they're reviewing — something like: *"Acceptance Criteria are the testable checks that will prove this change works — each one is a specific behavior you'll want verified. Please review whether these are the right ones."* Adjust the wording to feel natural, but always include a primer the first time. Skip it on subsequent re-shows after edits.
+
+Ask the user a single, direct question — something like: *"Do these AC cover what you care about — anything to add, remove, or tighten?"* Keep it to one question; don't bombard the user with a checklist of separate prompts.
+
+Apply the user's feedback: add missing criteria, remove redundant ones, tighten vague ones, split bundled ones. Re-show the updated AC list (call out what changed since the previous round so the user isn't re-reading from scratch) and ask again. Repeat this loop until the user **explicitly** confirms the AC is aligned with what they want.
+
+**Get a clear sign-off from the user before moving to Step 3.** A simple "yes" or "go ahead" is enough.
 
 ### Step 3: Create Runbook
+
+**Only run this step after the user has explicitly confirmed alignment in Step 2.**
 
 Use the `specSubmit` MCP tool from the Aviator server with:
 - `repo_name`: The repository in `owner/repo` format
