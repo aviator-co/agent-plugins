@@ -15,7 +15,6 @@ $ARGUMENTS - Optional additional context or instructions for the runbook
 ### Step 1: Generate Message + Spec
 
 Generate the artifacts from the session context. **Acceptance Criteria is the primary output of this step** — prioritize its quality over the length or polish of any other section. A spec with sharp AC and a thin Intent is better than a spec with a lush Intent and generic AC.
-Generate the artifacts from the session context. **Acceptance Criteria is the primary output of this step** — prioritize its quality over the length or polish of any other section. A spec with sharp AC and a thin Intent is better than a spec with a lush Intent and generic AC.
 
 #### Message
 
@@ -46,7 +45,7 @@ Favor fewer, sharper criteria over many shallow ones. A handful of strong outcom
 Every AC has two audiences and both must accept it:
 
 - **AI verifier** who later judges pass/fail. The criterion must reduce to a deterministic check the verifier can run against the system, code, or output — DOM/CSS inspection, API calls, file checks, test runs, state queries. If the only way to evaluate it is human judgment, it is not a gate.
-- **The human** The criterion must read at a glance. They shouldn't have to mentally filter past implementation noise — file paths, hex codes, pixel values, internal structures, internal type names — to extract the actual gate.
+- **The human** The criterion must read at a glance. They shouldn't have to mentally filter past implementation noise — file paths, hex codes, pixel values, internal structures, internal type names, function or handler names, internal route paths, queue/task names, middleware steps, infrastructure component names (Redis, Celery, Postgres, Kafka, etc.) — to extract the actual gate. Name the user-visible product, customer-facing surface, or externally observable outcome that's affected; mention internal infrastructure only when it IS the failure mode being tested (e.g. "if the cache is unavailable, requests still succeed").
 
 If a candidate AC fails either reader, it doesn't belong on the list.
 
@@ -65,13 +64,12 @@ If the honest answer is vague ("things would just be less good", "code wouldn't 
 - **Functional correctness:** the change does the right thing — golden path, edge cases, failure modes, invariants. *"`divide(1, 0)` returns `Err(DivByZero)`"*.
 - **Codebase consistency:** the change fits with existing code — passes the repo's linter/formatter/type-checker, reuses existing helpers instead of duplicating logic, matches established patterns, doesn't quietly change public APIs, doesn't introduce new dependencies. *"`make lint` exits 0 with no new warnings"*, *"reuses `internal/retry.Backoff` instead of a new loop"*, *"no new entries in `package.json` `dependencies`"*.
 
-A spec with only functional AC is incomplete. A spec author who skips the consistency axis is shipping AC that pass-but-still-break the codebase. Treat consistency as a first-class deliverable, not a checklist afterthought.
 
 ##### Sources to draw AC from — prioritize code over plan
 
 Do not generate from imagination. Before writing any AC, go read what's actually there — and treat the sources in this order of priority:
 
-- **Code changes made in this session (primary source).** Implementation drifts from the plan as the session goes on, so the final code — not the original plan — is the ground truth for what this change actually *does*. Read the modified files end-to-end, not just the diff hunks, and understand what the code is trying to do: what behavior each new/changed function introduces, what invariants it preserves, what public surface it exposes, what failure modes it handles, what it replaces or removes. Every behavior present in the code must map to an AC, and the current code must pass every AC you write.
+- **Code changes made in this session (primary source).** Implementation could drifts from the plan as the session goes on, so the final code — not the original plan — is the ground truth for what this change actually *does*. Read the modified files end-to-end, not just the diff hunks, and understand what the code is trying to do: what behavior each new/changed function introduces, what invariants it preserves, what public surface it exposes, what failure modes it handles, what it replaces or removes. Every behavior present in the code must map to an AC, and the current code must pass every AC you write.
 - **Existing spec, plan, or `$ARGUMENTS` (secondary source — cross-check, don't copy blindly).** If the user wrote a spec, ran plan mode, or supplied content via `$ARGUMENTS`, mine it for must-haves, constraints, and explicit success criteria the user already endorsed — preserve those, don't drop them. Use the plan to catch behaviors the code *should* have but doesn't (a gap, not a pass). **When the plan and the code disagree, trust the code** and surface the divergence to the user so they can confirm it was intentional — don't silently write AC for a behavior the code no longer implements.
 
 If the code would fail one of your AC, that's a signal: either the AC is wrong, or the change is incomplete. Flag the gap to the user rather than papering over it.
@@ -117,14 +115,30 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
 
 **Implementation-detail numerics that are noise to the human reader.** Pixel breakpoints, exact rem values, hex/rgba colors, exact font weights. The verifier could check them, but a human scanning the list has to mentally filter them to extract the gate. Two layers to this rule:
 
+- **Don't invent specifics the spec did not supply.** Framework defaults, library conventions, or your own reasoning are not the spec. The implementation STEPS own implementation detail; the AC owns the gate.
+  - Spec said "service retries on transient failures." Bad AC: "Service retries up to 3 times with 100ms backoff." Good AC: "Service retries on transient failures."
+- **Prefer the abstract level even when the spec supplied a value.** Lift the gate to what a reader can absorb at a glance — but stop before "abstract" becomes "subjective taste." If the abstract version reduces to a taste word, you have gone too far; restructure or drop.
+  - When the value IS the contract, keep it verbatim. Spec said "API returns 429 when rate-limited." Keep "API returns 429 when rate-limited."
+  - When the value is incidental, name its role. Spec gave a specific color hex for badges. Better: "Badges use the brand accent color."
+
 **Generic quality gates, used as a stand-in for thinking.** "All tests pass" in isolation for a greenfield feature tells you nothing the CI does not already tell you.
   - Do not rely on test-pass or CI-green as your only criteria when the change adds new behavior.
   - It IS a valid outcome when the change preserves existing behavior (upgrades, migrations, refactors, dependency bumps) or when fixing tests/CI is the explicit goal. In those cases, "existing tests continue to pass after the change" is a meaningful regression guard.
   - Avoid vague variants like "the code compiles" that don't describe an outcome the user cares about.
 
-**Internal component, class, hook, prop, attribute, or data-shape names in behavioral AC.** Describe what the user or caller *sees*, not the internal representation. Refer to UI surfaces by what shows up on the page (page title, panel name, view name) — not the React component class. Refer to behavior by what's observable — not the hook that produces it, the prop that flips it, or the field on its return value. Internal identifiers do not belong in AC. Lift to the observable behavior the identifier produces.
-  - Bad: "On `NewQueuePage`, `ClaudeProcessLogs`, and `ReleaseCutContainer`, a polling network error shows the dismissible banner above existing data."
-  - Good: "When background polling fails, a dismissible error banner appears above the existing data, and the previously loaded data remains visible.
+**Internal code identifiers as the subject of behavioral AC.** Function names, handler names, celery/queue task names, internal route paths, middleware steps (signature validation, auth check ordering), class/component/hook/prop/attribute names, internal table/column names, and infrastructure component names (Redis, Postgres, Celery, Kafka) — when any of these become the *subject* of the criterion, the AC reads like a code annotation rather than a behavioral gate. Reframe so the subject is the user, the customer-visible product/surface, or an externally observable outcome. Describe what the user or caller *sees*, not which internal step produced it.
+
+  UI example:
+  - Bad: "On the queue, logs, and release pages, a polling network error shows the dismissible banner above existing data."
+  - Good: "When background polling fails, a dismissible error banner appears above the existing data, and the previously loaded data remains visible."
+
+  Backend example — also note how splitting one mechanism-laden bullet yields two cleaner outcome bullets:
+  - Bad (one bullet, mechanism-led): "Inbound SMS for unpaid customers is dropped at `/api/sms/inbound` before `process_sms` is enqueued; signature validation is skipped. The `_reactivate_account` path invalidates the Redis entry on reactivation."
+  - Good (split into two outcome-led bullets):
+    - "Inbound SMS for unpaid customers is accepted with HTTP 200 but produces no auto-replies, agent inbox entries, or downstream automation runs."
+    - "When an unpaid account settles its balance — via card retry success or admin override — inbound SMS resumes flowing immediately, without the customer waiting out a cache TTL."
+
+  If a value or identifier IS the externally observable contract — an HTTP status code, a public API field name, a customer-facing CLI flag, a documented config key — keep it. The rule targets internal mechanism leaking into AC, not all technical specifics.
 
 - **Subjective taste vocabulary.** UI/UX criteria like *readable, clean, modern, intuitive, comfortable, polished, easy to use* name a feeling, not a gate — two reviewers can disagree and both be right. Reframe as a structural property the eye can verify, or delete the criterion.
   - Bad: "The dashboard layout is clean and easy to scan."
@@ -143,18 +157,14 @@ This is the only case where implementation-level specifics earn a place. Do not 
 
 The spec provides the supporting context the AC needs to be unambiguous — no more. Don't pad.
 
-The spec provides the supporting context the AC needs to be unambiguous — no more. Don't pad.
-
 If a plan file exists from plan mode (check the plan file path mentioned in the system prompt), read it and check whether its content is relevant to the user's current intent. If it is, use it as-is — do not restructure, reformat, or rewrite it. Pass its content through directly as the spec. If the plan file is unrelated to the current task, ignore it and generate a new spec instead.
 
 Similarly, if a spec file already exists in the conversation — either one the user wrote, one generated earlier in the session, or one provided via $ARGUMENTS — use it as-is. Do not restructure, reformat, or rewrite an existing spec. Pass it through directly. When the spec comes from a file, preserve the original filename — do not rename it.
 
 If no existing spec is available, generate one. Use these sections:
-If no existing spec is available, generate one. Use these sections:
 
 ```
 ## Intent
-What this change accomplishes and why. Keep it brief — enough context to make the AC make sense.
 What this change accomplishes and why. Keep it brief — enough context to make the AC make sense.
 
 ## Scope
@@ -168,18 +178,14 @@ Ordered implementation steps or phases.
 ## Acceptance Criteria
 - [ ] Concrete, testable, observable criteria (see rules above)
 - [ ] Each one probes a distinct behavior
-- [ ] Concrete, testable, observable criteria (see rules above)
-- [ ] Each one probes a distinct behavior
 ```
 
-Adapt sections to fit the task — not every section is needed. Intent and Acceptance Criteria are the ones that almost always belong. Scope and Steps are optional supporting detail.
 Adapt sections to fit the task — not every section is needed. Intent and Acceptance Criteria are the ones that almost always belong. Scope and Steps are optional supporting detail.
 
 ### Step 2: Review Acceptance Criteria with User — Iterate Until Aligned
 
 Before submitting, show the user **only the Acceptance Criteria** for review. Do not dump the full spec body (Intent / Scope / Steps) into the chat — the spec is generated and will be submitted, but it's supporting context, not what the user is being asked to confirm. You may include the one-line message above the AC for grounding, but nothing more. If the user wants to see the spec body, they'll ask — show it then. Otherwise, keep the review focused on AC alone.
 
-**On the first showing of AC in this flow, preface it with a one-line primer** so users unfamiliar with the term know what they're reviewing — something like: *"Acceptance Criteria are the code-anchored behaviors this change must satisfy — each one will be verified independently against the codebase after the work is done. Please review whether these are the right ones."* Adjust the wording to feel natural, but always include a primer the first time. Skip it on subsequent re-shows after edits.
 **On the first showing of AC in this flow, preface it with a one-line primer** so users unfamiliar with the term know what they're reviewing — something like: *"Acceptance Criteria are the code-anchored behaviors this change must satisfy — each one will be verified independently against the codebase after the work is done. Please review whether these are the right ones."* Adjust the wording to feel natural, but always include a primer the first time. Skip it on subsequent re-shows after edits.
 
 Ask the user a single, direct question — something like: *"Do these AC cover what you care about — anything to add, remove, or tighten?"* Keep it to one question; don't bombard the user with a checklist of separate prompts.
@@ -197,11 +203,7 @@ Apply the user's feedback: add missing criteria, remove redundant ones, tighten 
 - Replace the spec's `## Acceptance Criteria` section with the exact bullets the user confirmed in Step 2 — nothing added, nothing dropped, in the same order.
 
 Then use the `specSubmit` MCP tool from the Aviator server with:
-**Lock the confirmed AC into the spec before submitting.** The AC list the user signed off on in Step 2 is the final AC — the downstream runbook must not regenerate, rephrase, extend, or prune them. Before calling `specSubmit`:
 
-- Replace the spec's `## Acceptance Criteria` section with the exact bullets the user confirmed in Step 2 — nothing added, nothing dropped, in the same order.
-
-Then use the `specSubmit` MCP tool from the Aviator server with:
 - `repo_name`: The repository in `owner/repo` format
 - `message`: The confirmed message
 - `spec_files`: `[{"filename": "<original filename or spec.md>", "content": "..."}]` (only if a spec was generated; always a single file — use the original filename if the spec came from a file)
