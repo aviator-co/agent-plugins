@@ -43,6 +43,10 @@ cat <git-common-dir>/av/av.db
 
 **NEVER pass `--no-edit` to `av commit --amend`.** The flag doesn't exist — no-edit is already the default behavior. Just use `av commit --amend`.
 
+**NEVER use `gh pr edit --body` to update an av-managed PR's description.** It does a full body replacement and overwrites the `<!-- av pr metadata -->` block that av embeds at the end of the body to track the stack — stripping it silently breaks stack tracking. Use `av pr --title "..." --body "..."` instead; it works on existing PRs and preserves the metadata block.
+
+**NEVER use `av pr --edit`.** It opens an editor that agents cannot drive. Use `av pr --title "..." --body "..."` directly — it works for both creating new PRs and updating existing ones without an editor.
+
 ## Detection & Setup
 
 **Check if av is initialized**: run `git rev-parse --git-common-dir`, then `test -f <git-common-dir>/av/av.db`
@@ -63,7 +67,7 @@ Many `av` commands default to interactive TUI prompts that agents cannot use. **
 | --- | --- | --- |
 | `av sync` | Prompts for push and prune confirmation | `--push=yes` (or `=no`), `--prune=yes` (or `=no`) |
 | `av pr` (new PR) | Opens editor for title/body | `--title "..." --body "..."` |
-| `av pr` (existing PR) | No prompt — just pushes | No flags needed; bare `av pr` works |
+| `av pr` (existing PR) | No prompt — just pushes | Bare `av pr` pushes. Add `--title`/`--body` to also update the description (still no editor, preserves the av metadata block) |
 | `av switch` (no args) | Opens branch picker | `av switch <branch-name>` |
 | `av adopt` (no args) | Interactive branch selection | `av adopt --parent <parent>` on the target branch |
 | `av split-commit` | Interactive chunk picker | **No non-interactive mode.** Use `git reset` + manual staging instead |
@@ -194,7 +198,7 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 
 - `git commit -m "message"` → use `av commit -m "message"` instead
 - `git push` → use `av pr` when creating a PR (it pushes automatically); use `av sync --push=yes --prune=yes` to push changes and rebase across the stack
-- `av pr --title "..." --body "..."` when PR already exists → just `av pr` (no args needed, no editor prompt)
+- `gh pr edit --body "..."` to update an av-managed PR description → use `av pr --title "..." --body "..."` instead; `gh pr edit --body` strips the av metadata block and breaks stack tracking
 - `av sync --push=yes --prune=yes` just to push a single standalone branch → use `av pr` instead (but `av sync` is correct when working in a stack)
 - `av commit --amend --no-edit` → just `av commit --amend` (no-edit is the default, the flag doesn't exist)
 - `av sync` before/after `av pr` → unnecessary; `av pr` pushes on its own
@@ -211,7 +215,7 @@ Each layer gets its own focused PR. Reviewers with different expertise (DBA, bac
 
 **`av pr` automatically pushes** the current branch to the remote before creating or updating the PR. No prior `av sync` or `git push` is needed.
 
-**Note:** Pass `--title` and `--body` when creating a new PR to avoid editor prompts. When the branch already has a PR, bare `av pr` just pushes — no editor, no prompt.
+**Note:** Pass `--title` and `--body` when creating a new PR to avoid editor prompts. On an existing PR, bare `av pr` just pushes; pass `--title`/`--body` to also update the description non-interactively. Either way, av preserves the `<!-- av pr metadata -->` block at the end of the body. Don't reach for `gh pr edit --body` — it strips that block.
 
 ### Synchronization
 
