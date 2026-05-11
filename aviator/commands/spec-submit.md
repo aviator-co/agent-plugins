@@ -208,13 +208,39 @@ Then use the `specSubmit` MCP tool from the Aviator server with:
 - `message`: The confirmed message
 - `spec_files`: `[{"filename": "<original filename or spec.md>", "content": "..."}]` (only if a spec was generated; always a single file — use the original filename if the spec came from a file)
 
-The tool will return the runbook URL.
+The tool will return the runbook URL. Treat the returned URL as the canonical **Runbook URL** for this session — hold it for any PR opened later in the same session.
 
-### Step 4: Return Link
+### Step 4: Return Link and Set PR Directive
+
+#### 4a. Return to user
 
 Provide the user with:
 - The Runbook URL from the tool response
 - A brief summary of what was submitted
+
+#### 4b. PR description directive (session-scoped)
+
+When opening a PR for this runbook's work later in the same session, the PR body **MUST** begin with `Runbook: <runbook-url>` on its own line, followed by a blank line, then the rest of the description. This applies to `gh pr create`, `av pr`, or any equivalent PR-opening command.
+
+Sub-rules:
+
+- **Prepend, don't replace.** The `Runbook:` line goes *above* any template, summary, or drafted body — not in place of it. Existing PR-description content (Summary, Test plan, etc.) is preserved unchanged below it.
+- **Exact format.** `Runbook: <runbook-url>` on its own line. Plain text — no markdown link, no emoji, no prefix. Keep it greppable so tooling can parse it.
+- **Body only, not title.** Never put the URL in the PR title. Never add it to commit messages or branch names.
+- **Scope.** Applies only to PRs that implement *this* runbook's work in *this* session.
+- **New PRs only.** If a PR for this work already exists when `/spec-submit` runs, leave it alone — do not retroactively edit existing PR descriptions.
+
+Expected PR body shape:
+
+```
+Runbook: <runbook-url>
+
+## Summary
+…
+
+## Test plan
+…
+```
 
 ## Error Handling
 
