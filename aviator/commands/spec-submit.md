@@ -129,7 +129,7 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
 **Generic quality gates, used as a stand-in for thinking.** "All tests pass" in isolation for a greenfield feature tells you nothing the CI does not already tell you.
   - Do not rely on test-pass or CI-green as your only criteria when the change adds new behavior.
   - Avoid vague variants like "the code compiles" that don't describe an outcome the user cares about.
-  - Bad: "`just pytest tests/<module>.py` passes." Two failures in one bullet — it's a command invocation (the AC should name the behavior the test verifies, not the test runner), and it leaks a file path (implementation detail, not outcome). Skip these — don't write them as AC at all.
+  - Don't cite the verification mechanism as the acceptance criterion. Test commands, runner invocations, CI job names, and test file paths describe *how* the behavior is checked, not *what* the behavior is — name the outcome the check defends instead. Bad: "All test cases pass." Good: "Requests to protected routes without a valid token return 401."
 
 **Internal code identifiers as the subject of behavioral AC.** Function names, handler names, celery/queue task names, internal route paths, middleware steps (signature validation, auth check ordering), class/component/hook/prop/attribute names, internal table/column names, and infrastructure component names (Redis, Postgres, Celery, Kafka) — when any of these become the *subject* of the criterion, the AC reads like a code annotation rather than a behavioral gate. Reframe so the subject is the user, the customer-visible product/surface, or an externally observable outcome. Describe what the user or caller *sees*, not which internal step produced it.
 
