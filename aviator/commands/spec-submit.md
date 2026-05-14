@@ -212,6 +212,8 @@ Then use the `specSubmit` MCP tool from the Aviator server with:
 - `repo_name`: The repository in `owner/repo` format
 - `message`: The confirmed message
 - `spec_files`: `[{"filename": "<original filename or spec.md>", "content": "..."}]` (only if a spec was generated; always a single file — use the original filename if the spec came from a file)
+- `branch_name` (optional): a local branch where the spec's work lives. Setting this does two things — any PR later opened from that branch can be auto-connected to the runbook, and any work already pushed to the branch can inform the generated spec.
+- `target_branch` (optional): the base branch the runbook is built on top of — omit for the repo default (trunk); pass the parent branch when this work is stacked on top of another in-flight branch
 
 The tool will return the runbook URL. Treat the returned URL as the canonical **Runbook URL** for this session — hold it for any PR opened later in the same session.
 
