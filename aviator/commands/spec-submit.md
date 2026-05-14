@@ -80,6 +80,7 @@ If the code would fail one of your AC, that's a signal: either the AC is wrong, 
 - Describe an observable outcome or user-visible behavior that determines acceptance.
 - Declarative, outcome-stating phrasing ("Users can log in with email and password", "API returns 401 for missing auth token"). Describe the resulting state of the system, not an action to take — actions belong in the runbook steps.
 - Specific enough to judge pass or fail by inspection.
+- Should be human readable — a natural-language sentence, not a code snippet or annotation.
 
 ### Coverage
 
@@ -98,12 +99,16 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
 
 ##### Anti-patterns — do not produce these
 
+**Code blocks or snippets inside an AC — strict no.** Every AC is a one-line natural-language gate. Do not embed fenced code blocks, JSON/YAML payloads, SQL statements, request/response bodies, function signatures, or stack traces inside an AC bullet. If the behavior seems to need code to be clear, the criterion is doing too much — split it, move the example into the spec's Steps section, or rewrite the AC at a higher level.
+  - Bad: an AC bullet followed by a fenced ```json``` block showing the expected response.
+  - Good: "The articles list response includes a published timestamp in ISO-8601 format for every article."
+
 **Subjective taste words.** Words like "readable," "comfortable," "airy," "clean," "modern," "elegant" describe taste. The verifier has no deterministic check for them. If the spec used these words, translate the underlying intent into a checkable structural property — an observable layout assertion, not a measurement — or drop the criterion.
 - Bad: "The article body has comfortable line height and airy paragraph spacing."
 - Good (if the intent is layout constraint): "The article body is constrained to a centered column rather than spanning the full viewport width."
 - Or: drop the criterion entirely if other gates already capture the intent. Taste is not a gate.
 
-**Exact file paths and line numbers.** These describe implementation, not outcome. Noise to human reader. Identifiers (function names, type names, module names) paths and line ranges all should be avoided.
+**Exact file paths, module paths, function/class names, and line numbers — strictly prohibited.** These describe implementation, not outcome, and are noise to a human reader. This covers absolute paths (`src/<area>/<file>.py`), dotted module/function paths (`package.module.helper_function`), GraphQL resolver or schema-type names, and any function/class/type/module name used as the subject of the AC. If you find yourself naming an internal identifier to make the AC sound concrete, rewrite to describe the user-visible or externally observable behavior instead.
   - Bad: "A new test module exists at `tests/api/users_test.py`."
   - Good: "Requests with a malformed JWT return 401 from any protected endpoint."
   - Bad: "Function `validateJwt` exists in `src/auth/jwt.py`."
@@ -123,8 +128,8 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
 
 **Generic quality gates, used as a stand-in for thinking.** "All tests pass" in isolation for a greenfield feature tells you nothing the CI does not already tell you.
   - Do not rely on test-pass or CI-green as your only criteria when the change adds new behavior.
-  - It IS a valid outcome when the change preserves existing behavior (upgrades, migrations, refactors, dependency bumps) or when fixing tests/CI is the explicit goal. In those cases, "existing tests continue to pass after the change" is a meaningful regression guard.
   - Avoid vague variants like "the code compiles" that don't describe an outcome the user cares about.
+  - Don't cite the verification mechanism as the acceptance criterion. Test commands, runner invocations, CI job names, and test file paths describe *how* the behavior is checked, not *what* the behavior is — name the outcome the check defends instead. Bad: "All test cases pass." Good: "Requests to protected routes without a valid token return 401."
 
 **Internal code identifiers as the subject of behavioral AC.** Function names, handler names, celery/queue task names, internal route paths, middleware steps (signature validation, auth check ordering), class/component/hook/prop/attribute names, internal table/column names, and infrastructure component names (Redis, Postgres, Celery, Kafka) — when any of these become the *subject* of the criterion, the AC reads like a code annotation rather than a behavioral gate. Reframe so the subject is the user, the customer-visible product/surface, or an externally observable outcome. Describe what the user or caller *sees*, not which internal step produced it.
 
