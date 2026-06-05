@@ -57,12 +57,14 @@ If you can name a specific impact and a specific party affected — a user sees 
 
 If the honest answer is vague ("things would just be less good", "code wouldn't be as clean"), the AC is filler, delete it.
 
-**Both functional issues *and* codebase-health issues** (lint failures, broken conventions, duplicated logic, missing observability) count — anyone downstream of this change (user, build system, reviewer, maintainer, operator) is a valid party.
+**Both functional issues *and* codebase-health issues** (broken conventions, duplicated logic, missing observability) count — anyone downstream of this change (user, reviewer, maintainer, operator) is a valid party. The build pipeline is not on this list: a green type-check/lint/format/CI run is never the impact an AC defends (see the anti-pattern below).
 
-##### AC must cover two axes — both are required
+##### AC covers behavior first, fit second
 
-- **Functional correctness:** the change does the right thing — golden path, edge cases, failure modes, invariants. *"`divide(1, 0)` returns `Err(DivByZero)`"*.
-- **Codebase consistency:** the change fits with existing code — passes the repo's linter/formatter/type-checker, reuses existing helpers instead of duplicating logic, matches established patterns, doesn't quietly change public APIs, doesn't introduce new dependencies. *"`make lint` exits 0 with no new warnings"*, *"reuses `internal/retry.Backoff` instead of a new loop"*, *"no new entries in `package.json` `dependencies`"*.
+- **Functional correctness (the core of every list):** the change does the right thing — golden path, edge cases, failure modes, invariants. *"`divide(1, 0)` returns `Err(DivByZero)`"*.
+- **Codebase fit (only when it's a genuine gate):** the change sits well with existing code — reuses existing helpers instead of duplicating logic, matches established patterns, doesn't quietly change a public API, doesn't pull in a new dependency. *"reuses `internal/retry.Backoff` instead of a new loop"*, *"no new entries in `package.json` `dependencies`"*. Skip this axis when the change has no such gate — don't manufacture one to fill a quota.
+
+The build pipeline is never an axis. Passing type-check, lint, formatting, compilation, or CI is not an acceptance criterion (see the anti-pattern below) — it says nothing about whether the feature works.
 
 
 ##### Sources to draw AC from — prioritize code over plan
@@ -126,10 +128,10 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
   - When the value IS the contract, keep it verbatim. Spec said "API returns 429 when rate-limited." Keep "API returns 429 when rate-limited."
   - When the value is incidental, name its role. Spec gave a specific color hex for badges. Better: "Badges use the brand accent color."
 
-**Generic quality gates, used as a stand-in for thinking.** "All tests pass" in isolation for a greenfield feature tells you nothing the CI does not already tell you.
-  - Do not rely on test-pass or CI-green as your only criteria when the change adds new behavior.
-  - Avoid vague variants like "the code compiles" that don't describe an outcome the user cares about.
+**Build / lint / type-check / format / CI gates — never an AC.** "Typecheck passes", "lint is clean", "`prettier` reports no changes", "the code compiles", "CI is green", "all tests pass" are never acceptance criteria — they are the pipeline's job and tell a reviewer nothing about whether the feature works. Do not add them, not even as a secondary item and never as a catch-all at the end of the list. The one adjacent case that IS valid is a deliberate regression guard on *preserved* behavior ("existing X still works after the refactor"), and even then phrase it as the behavior, not as "the test suite passes".
   - Don't cite the verification mechanism as the acceptance criterion. Test commands, runner invocations, CI job names, and test file paths describe *how* the behavior is checked, not *what* the behavior is — name the outcome the check defends instead. Bad: "All test cases pass." Good: "Requests to protected routes without a valid token return 401."
+
+**Implementation choices and tradeoffs we made — not AC.** Decisions reached while building (an icon instead of a text label, a fallback format kept for older targets, building markup via the DOM rather than string concatenation) are *how* the feature was built, not gates on *what* it does. An AC states the user-visible outcome, not the option picked to reach it. If a candidate criterion would only make sense to someone who watched the session — "uses an icon, not text", "keeps a markdown fallback" — either reframe it as the behavior it produces ("the stack pastes as clickable links in chat") or drop it. The current observable behavior is the contract, not the menu of choices behind it.
 
 **Internal code identifiers as the subject of behavioral AC.** Function names, handler names, celery/queue task names, internal route paths, middleware steps (signature validation, auth check ordering), class/component/hook/prop/attribute names, internal table/column names, and infrastructure component names (Redis, Postgres, Celery, Kafka) — when any of these become the *subject* of the criterion, the AC reads like a code annotation rather than a behavioral gate. Reframe so the subject is the user, the customer-visible product/surface, or an externally observable outcome. Describe what the user or caller *sees*, not which internal step produced it.
 
@@ -212,7 +214,7 @@ Then use the `specSubmit` MCP tool from the Aviator server with:
 - `repo_name`: The repository in `owner/repo` format
 - `message`: The confirmed message
 - `spec_files`: `[{"filename": "<original filename or spec.md>", "content": "..."}]` (only if a spec was generated; always a single file — use the original filename if the spec came from a file)
-- `working_branch` (optional): an existing branch where your spec's work lives. Setting this will inform the generated spec with the latest work you have pushed to remote (consider pushing your changes first), and will auto-connect the PR you open from this branch to the runbook this submission will create. Omit when the runbook should author the work from scratch — it will create and use its own branch.
+- `working_branch` (optional): the existing branch where this work lives, passed by name. It auto-connects the PR you open later from that branch to the runbook this submission creates. You do NOT need to push the branch before submitting — submit the spec now and open the PR afterward; the connection is made by branch name, not by what's on the remote. (If the branch happens to be pushed already, the runbook will also read its latest code, but unpushed is completely fine.) Omit when the runbook should author the work from scratch — it will create and use its own branch.
 - `target_branch` (optional): the branch this work is built on top of — omit for the repo default (trunk); pass the parent branch when this work is stacked on another in-flight branch
 
 The tool will return the runbook URL. Treat the returned URL as the canonical **Runbook URL** for this session — hold it for any PR opened later in the same session.
