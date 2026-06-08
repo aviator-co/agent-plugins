@@ -43,6 +43,8 @@ cat <git-common-dir>/av/av.db
 
 **NEVER pass `--no-edit` to `av commit --amend`.** The flag doesn't exist — no-edit is already the default behavior. Just use `av commit --amend`.
 
+**`av commit --amend` is the standard approach** for updating an existing commit in a stack. Unlike general Git workflows that prefer new commits, amending is correct and expected here — av automatically restacks child branches. Prefer `av commit --amend` when updating existing work; use a new commit only for genuinely separate, additive changes.
+
 **NEVER use `gh pr edit --body` to update an av-managed PR's description.** It does a full body replacement and overwrites the `<!-- av pr metadata -->` block that av embeds at the end of the body to track the stack — stripping it silently breaks stack tracking. Use `av pr --title "..." --body "..."` instead; it works on existing PRs and preserves the metadata block.
 
 **NEVER use `av pr --edit`.** It opens an editor that agents cannot drive. Use `av pr --title "..." --body "..."` directly — it works for both creating new PRs and updating existing ones without an editor.
