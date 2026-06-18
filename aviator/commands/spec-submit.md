@@ -51,11 +51,12 @@ If a candidate AC fails either reader, it doesn't belong on the list.
 
 ##### The north-star test — governs every other rule below
 
-Before writing or keeping any AC, ask: *"If this AC were violated, what specifically would get worse, and for whom?"*
+Before writing or keeping any AC, both must hold:
 
-If you can name a specific impact and a specific party affected — a user sees a bug, the build fails, the next maintainer is confused by an inconsistent pattern, the prod operator can't debug a silent failure — the AC is load-bearing, keep it.
+1. **This change can break it.** Trace the AC to the diff. If nothing in this change could flip it from pass to fail — it names a code path the diff doesn't touch, it guards behavior outside this change's scope — it is out of scope. Drop it, however important the behavior is in the abstract.
+2. **A violation has a named victim.** Ask "if this were violated, what gets worse, and for whom?" A specific impact on a specific party — a user hits a bug, the next maintainer trips on an inconsistent pattern, the prod operator can't debug a silent failure — means keep it. A vague answer ("things would just be less good", "code wouldn't be as clean") means filler, delete it.
 
-If the honest answer is vague ("things would just be less good", "code wouldn't be as clean"), the AC is filler, delete it.
+Test 2 alone is a trap: "if the auth cron broke, logins would fail" is severe and real, yet if this change never touches the auth cron, test 1 already ruled it out. Severity is not a license to gate what this change can't affect.
 
 **Both functional issues *and* codebase-health issues** (broken conventions, duplicated logic, missing observability) count — anyone downstream of this change (user, reviewer, maintainer, operator) is a valid party. The build pipeline is not on this list: a green type-check/lint/format/CI run is never the impact an AC defends (see the anti-pattern below).
 
@@ -63,8 +64,6 @@ If the honest answer is vague ("things would just be less good", "code wouldn't 
 
 - **Functional correctness (the core of every list):** the change does the right thing — golden path, edge cases, failure modes, invariants. *"`divide(1, 0)` returns `Err(DivByZero)`"*.
 - **Codebase fit (only when it's a genuine gate):** the change sits well with existing code — reuses existing helpers instead of duplicating logic, matches established patterns, doesn't quietly change a public API, doesn't pull in a new dependency. *"reuses `internal/retry.Backoff` instead of a new loop"*, *"no new entries in `package.json` `dependencies`"*. Skip this axis when the change has no such gate — don't manufacture one to fill a quota.
-
-The build pipeline is never an axis. Passing type-check, lint, formatting, compilation, or CI is not an acceptance criterion (see the anti-pattern below) — it says nothing about whether the feature works.
 
 
 ##### Sources to draw AC from — prioritize code over plan
@@ -88,7 +87,7 @@ If the code would fail one of your AC, that's a signal: either the AC is wrong, 
 
 Cover the meaningful behavior changes the runbook delivers. Each criterion is a gate that genuinely affects whether the work is done. Few and sharp beats many and shallow. A long list of overlapping restatements is worse than a short well-chosen set.
 
-When the runbook's deliverable is preserved behavior — refactors, restyles, migrations, dependency upgrades, performance work — "the existing X still works" is a meaningful gate, not a cop-out. Examples: "All existing article actions remain functional and resolve to their previous routes." "Existing tests continue to pass after the change." Do not drop these from preserve-behavior runbooks just because they sound generic.
+When the runbook's deliverable is preserved behavior — refactors, restyles, migrations, dependency upgrades, performance work — "the existing X still works" is a meaningful gate, not a cop-out. Examples: "All existing article actions remain functional and resolve to their previous routes." "Existing tests continue to pass after the change." Do not drop these from preserve-behavior runbooks just because they sound generic. But this only applies to behavior the change actually touches or could regress. Code the diff never goes near is unrelated code, not preserved behavior; "X still works" is not a gate when the change couldn't have broken X.
 
 - **Verifiable, not necessarily runnable.** Runnable checks (a command exits 0, an endpoint returns 401) are the gold standard, but behavioral, qualitative, and UX criteria are equally valid as long as the criterion is sharp enough that different reviewers would reach the same verdict. The disqualifying test is ambiguity, not un-runnable-ness — rewrite or delete any AC whose pass/fail depends on interpretation.
 
@@ -105,16 +104,18 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
   - Bad: an AC bullet followed by a fenced ```json``` block showing the expected response.
   - Good: "The articles list response includes a published timestamp in ISO-8601 format for every article."
 
-**Subjective taste words.** Words like "readable," "comfortable," "airy," "clean," "modern," "elegant" describe taste. The verifier has no deterministic check for them. If the spec used these words, translate the underlying intent into a checkable structural property — an observable layout assertion, not a measurement — or drop the criterion.
+**Subjective taste words.** Words like "readable," "comfortable," "airy," "clean," "modern," "intuitive," "polished," "elegant" name a feeling, not a gate — two reviewers can disagree and both be right, so the verifier has no deterministic check. If the spec used these words, translate the underlying intent into a checkable structural property — an observable layout assertion, not a measurement — or drop the criterion.
 - Bad: "The article body has comfortable line height and airy paragraph spacing."
 - Good (if the intent is layout constraint): "The article body is constrained to a centered column rather than spanning the full viewport width."
 - Or: drop the criterion entirely if other gates already capture the intent. Taste is not a gate.
 
-**Exact file paths, module paths, function/class names, and line numbers — strictly prohibited.** These describe implementation, not outcome, and are noise to a human reader. This covers absolute paths (`src/<area>/<file>.py`), dotted module/function paths (`package.module.helper_function`), GraphQL resolver or schema-type names, and any function/class/type/module name used as the subject of the AC. If you find yourself naming an internal identifier to make the AC sound concrete, rewrite to describe the user-visible or externally observable behavior instead.
-  - Bad: "A new test module exists at `tests/api/users_test.py`."
-  - Good: "Requests with a malformed JWT return 401 from any protected endpoint."
+**Internal identifiers — exact paths, function/class/type names, line numbers, infra component names — are noise, and never the subject of an AC.** Absolute paths (`src/<area>/<file>.py`), dotted paths (`package.module.helper`), GraphQL resolver/schema-type names, function/handler/class/component/hook/prop names, internal route paths, queue/task names, table/column names, and infrastructure names (Redis, Postgres, Celery, Kafka) describe implementation, not outcome. When one becomes the *subject* of a criterion, the AC reads like a code annotation rather than a behavioral gate. Reframe so the subject is the user, the customer-visible surface, or an externally observable outcome — what the caller *sees*, not which internal step produced it.
   - Bad: "Function `validateJwt` exists in `src/auth/jwt.py`."
   - Good: "JWT tokens are validated before any request reaches a protected route."
+  - Bad (mechanism-led): "Inbound SMS for unpaid customers is dropped at `/api/sms/inbound` before `process_sms` is enqueued."
+  - Good (outcome-led): "Inbound SMS for unpaid customers is accepted with HTTP 200 but produces no auto-replies, inbox entries, or downstream automation."
+
+  If a value or identifier IS the externally observable contract — an HTTP status code, a public API field name, a customer-facing CLI flag, a documented config key — keep it. The rule targets internal mechanism leaking into AC, not all technical specifics.
 
 **Internal data shapes or private structures.** A reader cannot see private state without the code; the verifier checking it conflates implementation with outcome.
 - Bad: "The `User` class has a `roles` list attribute."
@@ -128,28 +129,10 @@ When the runbook's deliverable is preserved behavior — refactors, restyles, mi
   - When the value IS the contract, keep it verbatim. Spec said "API returns 429 when rate-limited." Keep "API returns 429 when rate-limited."
   - When the value is incidental, name its role. Spec gave a specific color hex for badges. Better: "Badges use the brand accent color."
 
-**Build / lint / type-check / format / CI gates — never an AC.** "Typecheck passes", "lint is clean", "`prettier` reports no changes", "the code compiles", "CI is green", "all tests pass" are never acceptance criteria — they are the pipeline's job and tell a reviewer nothing about whether the feature works. Do not add them, not even as a secondary item and never as a catch-all at the end of the list. The one adjacent case that IS valid is a deliberate regression guard on *preserved* behavior ("existing X still works after the refactor"), and even then phrase it as the behavior, not as "the test suite passes".
+**Build / lint / type-check / format / CI gates — never an AC.** "Typecheck passes", "lint is clean", "`prettier` reports no changes", "the code compiles", "CI is green", "all tests pass" are never acceptance criteria — they are the pipeline's job and tell a reviewer nothing about whether the feature works. Do not add them, not even as a secondary item and never as a catch-all at the end of the list. The one adjacent case that IS valid is a deliberate regression guard on behavior *this change could plausibly break* ("existing X still works after the refactor"), and even then phrase it as the behavior, not as "the test suite passes".
   - Don't cite the verification mechanism as the acceptance criterion. Test commands, runner invocations, CI job names, and test file paths describe *how* the behavior is checked, not *what* the behavior is — name the outcome the check defends instead. Bad: "All test cases pass." Good: "Requests to protected routes without a valid token return 401."
 
 **Implementation choices and tradeoffs we made — not AC.** Decisions reached while building (an icon instead of a text label, a fallback format kept for older targets, building markup via the DOM rather than string concatenation) are *how* the feature was built, not gates on *what* it does. An AC states the user-visible outcome, not the option picked to reach it. If a candidate criterion would only make sense to someone who watched the session — "uses an icon, not text", "keeps a markdown fallback" — either reframe it as the behavior it produces ("the stack pastes as clickable links in chat") or drop it. The current observable behavior is the contract, not the menu of choices behind it.
-
-**Internal code identifiers as the subject of behavioral AC.** Function names, handler names, celery/queue task names, internal route paths, middleware steps (signature validation, auth check ordering), class/component/hook/prop/attribute names, internal table/column names, and infrastructure component names (Redis, Postgres, Celery, Kafka) — when any of these become the *subject* of the criterion, the AC reads like a code annotation rather than a behavioral gate. Reframe so the subject is the user, the customer-visible product/surface, or an externally observable outcome. Describe what the user or caller *sees*, not which internal step produced it.
-
-  UI example:
-  - Bad: "On the queue, logs, and release pages, a polling network error shows the dismissible banner above existing data."
-  - Good: "When background polling fails, a dismissible error banner appears above the existing data, and the previously loaded data remains visible."
-
-  Backend example — also note how splitting one mechanism-laden bullet yields two cleaner outcome bullets:
-  - Bad (one bullet, mechanism-led): "Inbound SMS for unpaid customers is dropped at `/api/sms/inbound` before `process_sms` is enqueued; signature validation is skipped. The `_reactivate_account` path invalidates the Redis entry on reactivation."
-  - Good (split into two outcome-led bullets):
-    - "Inbound SMS for unpaid customers is accepted with HTTP 200 but produces no auto-replies, agent inbox entries, or downstream automation runs."
-    - "When an unpaid account settles its balance — via card retry success or admin override — inbound SMS resumes flowing immediately, without the customer waiting out a cache TTL."
-
-  If a value or identifier IS the externally observable contract — an HTTP status code, a public API field name, a customer-facing CLI flag, a documented config key — keep it. The rule targets internal mechanism leaking into AC, not all technical specifics.
-
-- **Subjective taste vocabulary.** UI/UX criteria like *readable, clean, modern, intuitive, comfortable, polished, easy to use* name a feeling, not a gate — two reviewers can disagree and both be right. Reframe as a structural property the eye can verify, or delete the criterion.
-  - Bad: "The dashboard layout is clean and easy to scan."
-  - Good: "The article body is constrained to a centered column rather than spanning the full viewport width."
 
 ### When the value IS the deliverable
 
