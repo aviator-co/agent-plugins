@@ -10,7 +10,7 @@ Submit a Verify spec to Aviator from the current Claude Code session. Aviator Ve
 - **Key decisions & architecture** — a free-form record of the decisions made and the shape of the change, written so a reviewer can understand the PR without reading every line.
 - **Acceptance Criteria** — the concrete, observable behaviors the change must satisfy, verified independently against the code.
 
-**Load the `spec-submission` skill** (Skill tool → `aviator:spec-submission`) before you start — it carries the shared mechanics this flow relies on: how the message reads, the Acceptance Criteria review loop, the `specSubmit` call, and the PR directive. This command file only covers what's specific to Verify.
+**Load the `spec-submission` skill** (Skill tool → `aviator:spec-submission`) before you start — it carries the shared mechanics this flow relies on: how the message reads, the Acceptance Criteria review loop, the `aviator` CLI submission, and the PR directive. This command file only covers what's specific to Verify.
 
 ## Arguments
 
@@ -20,8 +20,8 @@ $ARGUMENTS - Optional additional context or instructions for the Verify submissi
 
 The code is the ground truth for a Verify submission. Before generating anything:
 
-- Identify the **working branch** — the branch the in-flight work lives on (typically the current git branch). You'll pass this as `working_branch` so Verify tracks the PR opened from it.
-- Identify the **repository** in `owner/repo` form (e.g. from `git remote get-url origin`) — you'll pass this as `repo_name`.
+- Identify the **working branch** — the branch the in-flight work lives on (typically the current git branch). You'll pass this as `--working-branch` so Verify tracks the PR opened from it.
+- Identify the **repository** in `owner/repo` form (e.g. from `git remote get-url origin`) — you'll pass this as `--repo`.
 - Read the **actual current changes** end-to-end (the diff against the base branch, and the modified files in full — not just the hunks). Understand what the code does: what behavior each change introduces, what invariants it preserves, what it exposes, what failure modes it handles, what it replaces.
 
 Everything below is drawn from what the code actually does, cross-checked against `$ARGUMENTS` and any spec/plan already in the session — never from imagination.
@@ -47,7 +47,7 @@ Aim for the altitude of "what a thoughtful reviewer needs to not be surprised, a
 
 ### Assembling the spec file
 
-Generate a single spec file (name it `spec.md`, or preserve the original filename if a spec already exists in the session — use it as-is, don't restructure it). The spec body is **intent + key decisions** — the acceptance criteria are **not** in the spec; they're passed as the `acceptance_criteria` argument at submit. Use these sections:
+Generate a single spec file (name it `spec.md`, or preserve the original filename if a spec already exists in the session — use it as-is, don't restructure it). The spec body is **intent + key decisions** — the acceptance criteria are **not** in the spec; they're passed through the `--criteria`/`--criteria-file` flags at submit. Use these sections:
 
 ```
 ## Intent
@@ -67,13 +67,24 @@ One thing specific to Verify: show the user the **intent** line and the **Accept
 
 ## Step 4: Submit for Verify
 
-Submit via the `specSubmit` call described in the `spec-submission` skill. For Verify:
+Submit with `aviator verify`, following the CLI mechanics in the `spec-submission` skill (preflight, repo derivation, criteria-file guidance, result parsing). What's specific to Verify:
 
-- `submission_type`: **`"verify"`** — this is the argument that makes it a Verify submission (intent + AC over human-authored code, no step generation). Do not omit it; the default is `"runbook"`.
-- `acceptance_criteria`: **required** — the confirmed AC as a JSON array of strings.
-- `working_branch`: **required** — the branch the in-flight work lives on (from Step 1), passed by name, so Verify tracks the PR you open from that branch.
+- `--intent`: **required** — the confirmed intent.
+- `--criteria` / `--criteria-file`: **required** — the confirmed AC (`aviator verify` seeds its structured criteria set from these). Prefer `--criteria-file` for more than 2–3.
+- `--working-branch`: **required for this flow** — the branch the in-flight work lives on (from Step 1), passed by name, so Verify tracks the PR you open from that branch.
+- `--spec` (optional): the spec file (intent + key decisions) from Step 2.
+- `--target-branch` (optional): the base branch to verify against; omit for the repo default.
 
-Then return the Runbook URL and set the PR directive, both per the `spec-submission` skill.
+```bash
+aviator verify \
+  --repo acme/web \
+  --intent "Gate the new banner behind the beta flag" \
+  --criteria-file /path/to/criteria.txt \
+  --working-branch feature/banner \
+  --spec /path/to/spec.md
+```
+
+On success the command prints `✓ Verify submission created: <url>` and a `Runbook #<n>` line. Then return the Runbook URL and set the PR directive, both per the `spec-submission` skill.
 
 ## Step 5: Keep Acceptance Criteria fresh as the PR evolves
 
@@ -81,9 +92,9 @@ Verify AC are a living contract, not a one-time snapshot. As you keep pushing co
 
 So, after a meaningful push to the connected PR in this session (a new behavior, a changed contract, a dropped or added piece of scope — not a typo fix):
 
-1. Re-read the current AC and the runbook's version: `getRunbook(url, fields=['acceptance_criteria'])` — note the returned `runbook_version` (an int).
+1. Re-read the current AC and the runbook's version: `aviator verify get <runbook-number> --fields acceptance_criteria --json` — note the `runbook_version` field in the output (an int).
 2. Compare the AC against the **current** diff. If the code now does something the AC don't cover, or an AC no longer matches what the code does, the AC are stale.
-3. Refresh them: `editRunbook(runbook_url, expected_version=<the version you just read>, payload={"acceptance_criteria": [<complete new list, in order>]})`. The payload is the COMPLETE new list — including unchanged items — and expresses add/update/remove/reorder in one atomic edit. If the edit fails with a stale-version error, someone else moved the runbook; re-read and retry.
+3. Refresh them with `aviator verify edit <runbook-number> --expected-version <the version you just read> --criteria-file <path>` (or repeated `--criteria` flags). The edit **replaces the entire criteria list**, so the file must hold the COMPLETE new list — including unchanged items, in order — expressing add/update/remove/reorder in one atomic edit. If it fails with a stale-version error, someone else moved the runbook; re-read the version and retry.
 4. Keep the same quality bar as Step 2 — observable outcomes, no implementation detail — and keep the user in the loop on non-trivial AC changes rather than silently rewriting their signed-off list.
 
-Do not re-run `specSubmit` to refresh AC — that creates a new runbook. Use `editRunbook` to update the existing one.
+Do not re-run `aviator verify` to refresh AC — that creates a new runbook. Use `aviator verify edit` to update the existing one.
