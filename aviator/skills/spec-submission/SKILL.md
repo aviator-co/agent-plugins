@@ -65,11 +65,11 @@ Assemble the invocation your command specifies (`aviator verify` or `aviator run
 Run the command. On success it prints a confirmation to stdout with the submission URL and runbook number, e.g.:
 
 ```
-✓ Verify submission created: https://app.aviator.co/runbooks/acme/web/42
+✓ Verify submission created: https://app.aviator.co/r/42
   Runbook #42
 ```
 
-Parse the URL and the `Runbook #<n>` number from that output. Treat the URL as the canonical **Runbook URL** for this session — hold it, and the number, for the AC-freshness loop and any PR opened later in the same session.
+Parse the URL and the `Runbook #<n>` number from that output. Treat the URL as the canonical **Runbook URL** for this session, and refer to the session as `r/<n>` (e.g. `r/42`) — that's the ID form every follow-up command takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42`. (They also accept a bare number or the full URL.) Hold both for the AC-freshness loop and any PR opened later in the same session.
 
 ## Return the link and set the PR directive
 

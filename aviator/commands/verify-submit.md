@@ -92,9 +92,9 @@ Verify AC are a living contract, not a one-time snapshot. As you keep pushing co
 
 So, after a meaningful push to the connected PR in this session (a new behavior, a changed contract, a dropped or added piece of scope — not a typo fix):
 
-1. Re-read the current AC and the runbook's version: `aviator verify get <runbook-number> --fields acceptance_criteria --json` — note the `runbook_version` field in the output (an int).
+1. Re-read the current AC and the runbook's version: `aviator results r/<n> --json` — note the `runbook_version` field in the output (an int). (`aviator show r/<n> --json` returns the full session; `results` is the lighter call.)
 2. Compare the AC against the **current** diff. If the code now does something the AC don't cover, or an AC no longer matches what the code does, the AC are stale.
-3. Refresh them with `aviator verify edit <runbook-number> --expected-version <the version you just read> --criteria-file <path>` (or repeated `--criteria` flags). The edit **replaces the entire criteria list**, so the file must hold the COMPLETE new list — including unchanged items, in order — expressing add/update/remove/reorder in one atomic edit. If it fails with a stale-version error, someone else moved the runbook; re-read the version and retry.
+3. Refresh them with `aviator edit r/<n> --expected-version <the version you just read> --criteria-file <path>` (or repeated `--criteria` flags). The edit **replaces the entire criteria list**, so the file must hold the COMPLETE new list — including unchanged items, in order — expressing add/update/remove/reorder in one atomic edit. If it fails with a stale-version error (409), someone else moved the runbook; re-read the version and retry — a stale edit writes nothing.
 4. Keep the same quality bar as Step 2 — observable outcomes, no implementation detail — and keep the user in the loop on non-trivial AC changes rather than silently rewriting their signed-off list.
 
-Do not re-run `aviator verify` to refresh AC — that creates a new runbook. Use `aviator verify edit` to update the existing one.
+Do not re-run `aviator verify` to refresh AC — that creates a new runbook. Use `aviator edit` to update the existing one.
