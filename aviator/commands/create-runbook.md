@@ -42,16 +42,16 @@ A simple "yes" or "go ahead" is enough to submit.
 
 Submit with `aviator runbook`, following the CLI mechanics in the `spec-submission` skill (preflight, repo derivation, criteria-file guidance, result parsing). What's specific to a Runbook:
 
-- `--prompt`: **required** — the short handoff message (the intent), the task description the agent works from.
+- `--intent`: **required** — the confirmed intent: what the runbook should accomplish and why. Keep it short and human-friendly; the implementation detail travels in the spec, and the intent is stored and displayed on the session as-is.
 - `--spec` (optional): the spec file — include only if one was generated or already existed; always a single file.
 - `--criteria` / `--criteria-file` (optional but recommended): the confirmed AC. The backend folds them into the spec the agent works from. Prefer `--criteria-file` for more than 2–3. Make sure the spec itself carries no "Acceptance Criteria" section when you pass these — the backend rejects that combination rather than guess which list wins.
 - `--target-branch` (optional): the base branch the runbook builds on and checks out; the generated PR opens against it. Omit for the repo default (trunk). (Runbook mode generates its own PR, so there's no working branch to connect here.)
-- `--title` (optional but worth setting): a short deliberate title for the runbook. Left unset, the backend derives one from the prompt — currently by truncation, which reads poorly for multi-sentence prompts.
+- `--title` (optional but worth setting): a short deliberate title for the runbook. Left unset, the backend derives one from the intent — currently by truncation, which reads poorly for multi-sentence intents.
 
 ```bash
 aviator runbook \
   --repo acme/web \
-  --prompt "Migrate the settings page to the new design system" \
+  --intent "Migrate the settings page to the new design system" \
   --spec /path/to/spec.md \
   --criteria-file /path/to/criteria.txt
 ```

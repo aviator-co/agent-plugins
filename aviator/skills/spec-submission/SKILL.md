@@ -9,7 +9,7 @@ This is the machinery shared by `/verify-submit` and `/create-runbook`. Your com
 
 ## The intent
 
-A short, human-friendly description of what this change accomplishes and why — written the way a person would describe it to a colleague filing a ticket. A few sentences at most. No markdown structure, no file paths, no code details. This is what you pass to the CLI — the `--intent` flag for `aviator verify`, the `--prompt` message for `aviator runbook`.
+A short, human-friendly description of what this change accomplishes and why — written the way a person would describe it to a colleague filing a ticket. A few sentences at most. No markdown structure, no file paths, no code details. This is the `--intent` flag on both commands. It's stored verbatim on the session and displayed in Aviator as the session's intent — the words you write here are the face of the submission, so hold the quality bar even when the rest of the flow carries a detailed spec.
 
 If the user provided `$ARGUMENTS`, lean on their words — echo their intent rather than rephrasing it technically.
 
