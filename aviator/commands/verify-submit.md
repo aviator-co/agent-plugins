@@ -21,7 +21,7 @@ $ARGUMENTS - Optional additional context or instructions for the Verify submissi
 The code is the ground truth for a Verify submission. Before generating anything:
 
 - Identify the **working branch** — the branch the in-flight work lives on (typically the current git branch). You'll pass this as `--working-branch` so Verify tracks the PR opened from it.
-- Identify the **repository** in `owner/repo` form (e.g. from `git remote get-url origin`) — you'll pass this as `--repo`.
+- Identify the **repository** in `owner/repo` form, following the repo-derivation procedure in the `spec-submission` skill (don't just read `origin`) — you'll pass this as `--repo`.
 - Read the **actual current changes** end-to-end (the diff against the base branch, and the modified files in full — not just the hunks). Understand what the code does: what behavior each change introduces, what invariants it preserves, what it exposes, what failure modes it handles, what it replaces.
 
 Everything below is drawn from what the code actually does, cross-checked against `$ARGUMENTS` and any spec/plan already in the session — never from imagination.
