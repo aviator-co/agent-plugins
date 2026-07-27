@@ -47,6 +47,7 @@ Submission goes through the `aviator` CLI. Before submitting, confirm it's avail
   go install github.com/aviator-co/aviator-cli/cmd/aviator@latest
   ```
 
+- **Check it's current:** run the `--help` of the command you're about to use and confirm the flags you need are listed — in particular, `aviator runbook --help` must show `--spec` and `--criteria-file`. If they're missing, the installed CLI predates spec/criteria support on runbooks — tell the user to upgrade and stop. (`aviator verify` gained these flags earlier, so their presence there does not imply support on `runbook`.)
 - **Check it's configured:** the CLI needs an API token, via the `AVIATOR_API_TOKEN` environment variable or `~/.config/aviator/config.yaml` (with an optional `AVIATOR_API_HOST` / `apiHost` override for on-prem). If a submit fails with an auth/config error, point the user at these — don't try to work around missing credentials.
 
 ## Locking and submitting
@@ -57,19 +58,24 @@ Submission goes through the `aviator` CLI. Before submitting, confirm it's avail
 
 Assemble the invocation your command specifies (`aviator verify` or `aviator runbook`) from these inputs, shared across both flows:
 
-- **Repo** (`--repo`): the repository in `owner/repo` format. Derive it from the git remote — `git remote get-url origin` — stripping any `.git` suffix and host prefix.
+- **Repo** (`--repo`): the repository in `owner/repo` format, derived from the git remote **the PR will target**. Run `git remote -v` first — when there's exactly one remote, use it; when there are several (e.g. a personal fork as `origin` plus the org repo), do not assume `origin`: check what the branch tracks (`git rev-parse --abbrev-ref @{u}`) and prefer the repo PRs are opened against, confirming with the user if it's genuinely ambiguous. A wrong-but-well-formed name is accepted silently and binds the submission to a repo no PR will ever link back to.
 - **Spec** (`--spec`): write the spec content to a file and pass its path. If the spec already came from a file on disk, pass that file directly; otherwise write it to a temp path (e.g. under the scratchpad) and pass that. Always a single file.
-- **Criteria** (`--criteria` / `--criteria-file`): the exact AC the user signed off on. `--criteria` is repeatable, but for more than 2–3 criteria prefer `--criteria-file <path>` — write one criterion per line to a file — to avoid shell-quoting issues with special characters. The two flags are mutually exclusive; pick one.
+- **Criteria** (`--criteria` / `--criteria-file`): the exact AC the user signed off on. `--criteria` is repeatable, but for more than 2–3 criteria prefer `--criteria-file <path>` — write one criterion per line to a file (same temp location as the spec) — to avoid shell-quoting issues with special characters. The two flags are mutually exclusive; pick one.
 - **Branch flags**: flow-specific — your command says which to pass (`--working-branch` for Verify, `--target-branch` where the work is stacked). See your command file.
 
-Run the command. On success it prints a confirmation to stdout with the submission URL and runbook number, e.g.:
+Run the command. On success it prints a confirmation to stdout — the first two lines are stable, and more detail lines (branches, criteria count, status) may follow:
 
 ```
 ✓ Verify submission created: https://app.aviator.co/r/42
   Runbook #42
+  Working branch: feature/banner
+  Target branch:  main
+  Criteria: 4
 ```
 
-Parse the URL and the `Runbook #<n>` number from that output. Treat the URL as the canonical **Runbook URL** for this session, and refer to the session as `r/<n>` (e.g. `r/42`) — that's the ID form every follow-up command takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42`. (They also accept a bare number or the full URL.) Hold both for the AC-freshness loop and any PR opened later in the same session.
+Parse the URL and the `Runbook #<n>` number from that output. The URL's host is the Aviator app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. Treat the URL as the canonical **Runbook URL** for this session, and refer to the session as `r/<n>` (e.g. `r/42`) — that's the ID form every follow-up command takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42`. (They also accept a bare number or the full URL.) Hold both for the AC-freshness loop and any PR opened later in the same session.
+
+One timing note for runbook submissions: `aviator show` returns a 400 "Runbook hasn't been generated yet" until step generation completes (it can take a few minutes). Right after submitting, that's expected — not a failed submission; retry later rather than treating it as an error.
 
 ## Return the link and set the PR directive
 

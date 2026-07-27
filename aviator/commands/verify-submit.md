@@ -61,7 +61,7 @@ Intent always belongs. Include Key Decisions & Architecture whenever the change 
 
 ## Step 3: Review Acceptance Criteria with the user
 
-Run the Acceptance Criteria review loop from the `spec-submission` skill — iterate until the user explicitly confirms.
+Run the Acceptance Criteria review loop from the `spec-submission` skill — iterate until the user explicitly confirms. (Running non-interactively with no user available? Use that skill's non-interactive provision instead of stalling.)
 
 One thing specific to Verify: show the user the **intent** line and the **Acceptance Criteria** — not the full spec body (Key Decisions & Architecture is submitted as supporting context, not what the user confirms). If they want to see the rest, they'll ask.
 
@@ -71,7 +71,7 @@ Submit with `aviator verify`, following the CLI mechanics in the `spec-submissio
 
 - `--intent`: **required** — the confirmed intent.
 - `--criteria` / `--criteria-file`: **required** — the confirmed AC (`aviator verify` seeds its structured criteria set from these). Prefer `--criteria-file` for more than 2–3.
-- `--working-branch`: **required for this flow** — the branch the in-flight work lives on (from Step 1), passed by name, so Verify tracks the PR you open from that branch.
+- `--working-branch`: **required for this flow** — the branch the in-flight work lives on (from Step 1), passed by name, so Verify tracks the PR you open from that branch. (The CLI marks the flag optional; a Verify submission still needs it, since without it no PR ever binds to the session.)
 - `--spec` (optional): the spec file (intent + key decisions) from Step 2.
 - `--target-branch` (optional): the base branch to verify against; omit for the repo default.
 
@@ -90,7 +90,7 @@ On success the command prints `✓ Verify submission created: <url>` and a `Runb
 
 Verify AC are a living contract, not a one-time snapshot. As you keep pushing commits to the connected PR, the code drifts from the AC the user originally signed off on — new behavior appears, scope shifts, an edge case gets handled differently. **Stale AC verify the wrong thing.**
 
-So, after a meaningful push to the connected PR in this session (a new behavior, a changed contract, a dropped or added piece of scope — not a typo fix):
+So, after a meaningful change to the work on this branch — pushed or still local — in this session (a new behavior, a changed contract, a dropped or added piece of scope — not a typo fix):
 
 1. Re-read the current AC and the runbook's version: `aviator results r/<n> --json` — note the `runbook_version` field in the output (an int). (`aviator show r/<n> --json` returns the full session; `results` is the lighter call.)
 2. Compare the AC against the **current** diff. If the code now does something the AC don't cover, or an AC no longer matches what the code does, the AC are stale.

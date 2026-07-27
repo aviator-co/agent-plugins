@@ -46,6 +46,7 @@ Submit with `aviator runbook`, following the CLI mechanics in the `spec-submissi
 - `--spec` (optional): the spec file — include only if one was generated or already existed; always a single file.
 - `--criteria` / `--criteria-file` (optional but recommended): the confirmed AC. The backend folds them into the spec the agent works from. Prefer `--criteria-file` for more than 2–3. Make sure the spec itself carries no "Acceptance Criteria" section when you pass these — the backend rejects that combination rather than guess which list wins.
 - `--target-branch` (optional): the base branch the runbook builds on and checks out; the generated PR opens against it. Omit for the repo default (trunk). (Runbook mode generates its own PR, so there's no working branch to connect here.)
+- `--title` (optional but worth setting): a short deliberate title for the runbook. Left unset, the backend derives one from the prompt — currently by truncation, which reads poorly for multi-sentence prompts.
 
 ```bash
 aviator runbook \
