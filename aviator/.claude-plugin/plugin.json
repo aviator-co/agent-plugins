@@ -1,6 +1,6 @@
 {
   "name": "aviator",
-  "description": "Create Aviator Runbooks from Claude Code sessions to capture and relay development workflows",
+  "description": "Submit specs to Aviator from Claude Code sessions — Verify (intent + acceptance criteria over your own code) and Runbooks (agentic code generation)",
   "author": {
     "name": "Aviator",
     "email": "support@aviator.co"
@@ -8,5 +8,5 @@
   "homepage": "https://aviator.co",
   "repository": "https://github.com/aviator-co/agent-plugins",
   "license": "MIT",
-  "keywords": ["runbooks", "aviator", "spec-driven", "spec-driven-development"]
+  "keywords": ["verify", "runbooks", "aviator", "spec-driven", "behavior-driven-development"]
 }

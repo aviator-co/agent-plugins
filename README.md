@@ -72,20 +72,24 @@ run `av pr --all` to create PRs for the entire stack.
 
 ### aviator
 
-Connects Claude Code to [Aviator Runbooks](https://aviator.co/runbooks) via MCP for workflow automation.
+Connects Claude Code to Aviator via MCP for spec submission to [Runbooks](https://aviator.co/runbooks) and Verify, to automate development workflows.
 
-**What are Runbooks?** Aviator Runbooks let you capture and replay complex development workflows. Create a runbook from your Claude session to save your exploration, decisions, and implementation approach for future use or to share with your team.
+**Verify vs Runbooks.** Aviator has two ways to hand a spec off from your Claude session:
+
+- **Verify** — *you* write the code and Aviator verifies it against your intent. You submit an intent, a free-form spec of the key decisions, and acceptance criteria; Aviator checks the PR you open against those criteria.
+- **Runbooks** — *Aviator's agent* writes the code from your spec. The spec carries full implementation detail so the runbook can capture and replay the workflow.
 
 **What this plugin does:**
 
-- Connects to the Aviator MCP server for runbook operations
-- Creates runbooks from your current Claude session context
+- Connects to the Aviator MCP server for spec submission and runbook operations
+- Submits Verify specs and creates runbooks from your current Claude session context
 - Handles OAuth authentication automatically
 - Provides access to Aviator's workflow automation tools
 
 **Usage:**
 
-Use `/spec-submit` to submit a spec and create a runbook from your current session.
+- `/verify-submit` — submit a Verify spec (intent + acceptance criteria) for code you're writing yourself.
+- `/create-runbook` — have Aviator's agent write the code from a spec with provided implementation detail.
 
 **Requirements:**
 
