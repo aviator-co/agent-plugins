@@ -72,7 +72,7 @@ run `av pr --all` to create PRs for the entire stack.
 
 ### aviator
 
-Connects Claude Code to Aviator via MCP for spec submission to [Runbooks](https://aviator.co/runbooks) and Verify, to automate development workflows.
+Submits specs from Claude Code to Aviator — [Runbooks](https://aviator.co/runbooks) and Verify — through the `aviator` CLI, to automate development workflows.
 
 **Verify vs Runbooks.** Aviator has two ways to hand a spec off from your Claude session:
 
@@ -81,10 +81,9 @@ Connects Claude Code to Aviator via MCP for spec submission to [Runbooks](https:
 
 **What this plugin does:**
 
-- Connects to the Aviator MCP server for spec submission and runbook operations
-- Submits Verify specs and creates runbooks from your current Claude session context
-- Handles OAuth authentication automatically
-- Provides access to Aviator's workflow automation tools
+- Guides Claude through writing the intent, spec, and acceptance criteria from your current session context
+- Submits Verify specs and creates runbooks via the `aviator` CLI
+- Keeps acceptance criteria fresh as a connected PR evolves
 
 **Usage:**
 
@@ -95,17 +94,12 @@ Connects Claude Code to Aviator via MCP for spec submission to [Runbooks](https:
 
 - An Aviator account at https://app.aviator.co
 - Repository connected to Aviator
+- The `aviator` CLI installed (`go install github.com/aviator-co/aviator-cli/cmd/aviator@latest`) and configured with an API token (`AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml`)
 
-**Self-hosted / On-prem:** The plugin connects to `https://app.aviator.co/mcp` by default. To point it at a self-hosted instance, set the `AVIATOR_MCP_URL` environment variable:
-
-```bash
-export AVIATOR_MCP_URL=https://aviator.your-company.com/mcp
-```
-
-Alternatively, you can configure the MCP server manually:
+**Self-hosted / On-prem:** The CLI talks to `https://api.aviator.co` by default. To point it at a self-hosted instance, set `AVIATOR_API_HOST` (or `apiHost` in `~/.config/aviator/config.yaml`):
 
 ```bash
-claude mcp add --transport http aviator https://aviator.your-company.com/mcp
+export AVIATOR_API_HOST=https://aviator.your-company.com
 ```
 
 ## Installation
