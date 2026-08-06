@@ -89,7 +89,6 @@ Submits specs from Claude Code to Aviator — [Runbooks](https://aviator.co/runb
 
 - `/verify-submit` — submit a Verify spec (intent + acceptance criteria) for code you're writing yourself.
 - `/create-runbook` — have Aviator's agent write the code from a spec with provided implementation detail.
-- `/spec-submit` — deprecated alias; points you at whichever of the two above fits.
 
 **Requirements:**
 
@@ -133,8 +132,7 @@ Both plugins ship their behavior as [Agent Skills](https://agentskills.io) — a
 ```
 aviator/skills/
 ├── verify-submit/    SKILL.md + references/acceptance-criteria.md
-├── create-runbook/   SKILL.md + references/acceptance-criteria.md
-└── spec-submit/      SKILL.md  (deprecated alias)
+└── create-runbook/   SKILL.md + references/acceptance-criteria.md
 
 av-cli/skills/
 └── av-cli/           SKILL.md + reference.md + examples.md
