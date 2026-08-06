@@ -1,8 +1,3 @@
----
-name: acceptance-criteria
-description: Acceptance Criteria quality rulebook for Aviator spec submissions. Load when generating or reviewing acceptance criteria for an Aviator Verify (/verify-submit) or Runbook (/create-runbook) submission — it defines what makes an AC valid.
----
-
 # Acceptance Criteria — quality rulebook
 
 This is the shared quality bar for Acceptance Criteria (AC) in an Aviator spec submission — it applies identically whether you're submitting for **Verify** (`/verify-submit`) or creating a **Runbook** (`/create-runbook`). AC are the concrete checks that prove a change works correctly and fits the codebase: the test plan a reviewer would actually run. Some AC are programmatically testable (an endpoint returns 401, a command exits 0); others are behavioral, qualitative, or UX expectations — both are valid as long as two reviewers would agree on whether the AC is met. AC are the contract between intent and implementation, and the highest-value artifact in the spec.

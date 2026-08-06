@@ -122,8 +122,23 @@ export AVIATOR_API_HOST=https://aviator.your-company.com
 git clone https://github.com/aviator-co/agent-plugins.git
 
 # Use with Claude Code
-claude --plugin-dir /path/to/claude-plugins
+claude --plugin-dir /path/to/agent-plugins
 ```
+
+## Structure
+
+Both plugins ship their behavior as [Agent Skills](https://agentskills.io) — a folder per skill, each with a `SKILL.md` and any supporting reference files it needs:
+
+```
+aviator/skills/
+├── verify-submit/    SKILL.md + references/acceptance-criteria.md
+└── create-runbook/   SKILL.md + references/acceptance-criteria.md
+
+av-cli/skills/
+└── av-cli/           SKILL.md + reference.md + examples.md
+```
+
+Each skill is invocable by name (`/verify-submit`) and self-contained, so a skill folder carries everything it needs.
 
 ## Learn More
 
