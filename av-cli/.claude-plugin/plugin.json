@@ -6,7 +6,7 @@
     "email": "support@aviator.co"
   },
   "homepage": "https://docs.aviator.co/aviator-cli",
-  "repository": "https://github.com/aviator-co/claude-plugins",
+  "repository": "https://github.com/aviator-co/agent-plugins",
   "license": "MIT",
   "keywords": ["git", "github", "stacked-prs", "code-review", "aviator"]
 }
