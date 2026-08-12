@@ -1,13 +1,26 @@
 ---
 name: create-runbook
-description: Create an Aviator Runbook — Aviator's agent writes the code from the spec you submit. Carries full implementation detail (intent, scope, ordered steps, acceptance criteria) and includes an implementation discussion before kicking off. Use when handing work off to Aviator's agent to implement rather than writing it yourself.
+description: Hand implementation off to Aviator's agent — Aviator's agent writes the code from the spec, with full implementation detail (intent, scope, ordered steps, acceptance criteria) and an implementation discussion before kicking off. ONLY for an explicit user request to have Aviator or its agent write the code, or for a "runbook" by name. Never the default for a spec, a submission, or acceptance criteria — "submit a spec", "submit this to Aviator", or anything arriving from a Verify context is verify-submit, not this.
 ---
 
 # Create a Runbook
 
-Create an Aviator Runbook from the current session context. **Aviator's agent writes the code** from the spec you submit, so this flow carries full implementation detail — intent, scope, ordered steps, and acceptance criteria — and includes an implementation discussion with you before kicking off.
+## Gate — did the user actually ask for this?
 
-> Writing the code yourself and just want Aviator to verify it against intent + acceptance criteria? Use `/verify-submit` instead — it captures intent and AC with no implementation steps.
+**Blocking. Resolve it before reading further or touching anything.** Proceed only if the user explicitly asked for:
+
+- **a runbook, by name** — "create a runbook", "kick off a runbook", `/create-runbook`; or
+- **Aviator's agent to write the code** — "have Aviator build this", "hand this off to Aviator", "let Aviator's agent implement it".
+
+Nothing else qualifies. Not "submit a spec", "submit this to Aviator", "send the acceptance criteria", "file this", "get this verified", and not arriving here from a verify, spec, or planning context without the words above. A request to *describe* the work is not a request to *delegate* it.
+
+**If the gate doesn't pass: stop, tell the user you're running Verify instead, and run `/verify-submit`.** Runbook mode sets Aviator's agent writing code nobody asked it to write, and spends runbook credits doing it. When you can't tell whether a hand-off is wanted, ask — never assume runbook.
+
+## What this flow is
+
+**Aviator's agent writes the code** from the spec you submit, so this flow carries full implementation detail — intent, scope, ordered steps, acceptance criteria — and includes an implementation discussion before kicking off.
+
+> Writing the code yourself and just want it verified against intent + AC? That's `/verify-submit`, and it's the default; this flow is the exception.
 
 ## Arguments
 
@@ -17,79 +30,70 @@ $ARGUMENTS - Optional additional context or instructions for the runbook.
 
 ### The intent
 
-A short, human-friendly description of what this change accomplishes and why — written the way a person would describe it to a colleague filing a ticket. A few sentences at most. No markdown structure, no file paths, no code details. This is the `--intent` flag. It's stored verbatim on the session and displayed in Aviator as the session's intent — the words you write here are the face of the submission, so hold the quality bar even though the spec carries the detail.
-
-If the user provided `$ARGUMENTS`, lean on their words — echo their intent rather than rephrasing it technically.
+`--intent`: a few sentences at most, the way you'd describe the change to a colleague filing a ticket. No markdown, no file paths, no code details. Stored verbatim and displayed as the session's intent, so hold the quality bar even though the spec carries the detail. If the user gave `$ARGUMENTS`, echo their words rather than rephrasing them technically.
 
 Good:
 > Add rate limiting to the public API so a single client can't exhaust capacity, returning 429 with a retry hint once the per-client budget is spent.
 
-Bad (too technical — that belongs in the spec):
+Bad (belongs in the spec):
 > Add `RateLimiter` middleware in `api/middleware.py`, wire a Redis token bucket keyed by client ID, decrement in `before_request`...
 
 ### Acceptance Criteria are the primary output
 
-The Acceptance Criteria (AC) are the highest-value artifact of the submission — prioritize their quality over the length or polish of the spec body. Sharp AC with a thin spec beat a lush spec with generic AC. AC are submitted through their own `--criteria`/`--criteria-file` flags, not embedded in the spec.
+Prioritize AC quality over spec polish — sharp AC with a thin spec beat a lush spec with generic AC. They go through `--criteria`/`--criteria-file`, never embedded in the spec.
 
-**Before writing or reviewing any AC, read [references/acceptance-criteria.md](references/acceptance-criteria.md)** and apply its rulebook in full — it defines what makes an AC valid, the two readers each AC must serve, the north-star test, which sources to draw from, and the anti-patterns to avoid. This is a blocking step.
+**Blocking: read [references/acceptance-criteria.md](references/acceptance-criteria.md) before writing or reviewing any AC**, and apply it in full.
 
-### Spec file
+### The spec file
 
-The spec provides the supporting context the AC needs to be unambiguous, plus the implementation detail the agent works from. Don't pad.
+The spec gives the AC the context they need to be unambiguous, plus the implementation detail the agent works from. Don't pad.
 
-If a plan file exists from plan mode (check the plan file path mentioned in the system prompt), read it and check whether its content is relevant to the user's current intent. If it is, use it as-is — do not restructure, reformat, or rewrite it. Pass its content through directly as the spec. If the plan file is unrelated to the current task, ignore it and generate a new spec instead.
-
-Similarly, if a spec file already exists in the conversation — one the user wrote, one generated earlier, or one provided via `$ARGUMENTS` — use it as-is. Do not restructure, reformat, or rewrite an existing spec. When the spec comes from a file, preserve the original filename.
-
-If no existing spec is available, generate one. Keep it **free-form** — there's no required structure or fixed set of sections. Write whatever best conveys the change to the agent that will implement it: the intent and the implementation approach or steps, shaped to the task rather than forced into headings. (The acceptance criteria are passed separately via `--criteria`/`--criteria-file` — you don't hand-embed them; the backend folds them into the spec the agent works from.)
+- **A plan file from plan mode** (path is in the system prompt): read it, and if it matches the user's current intent, pass it through **as-is** as the spec — no restructuring, reformatting, or rewriting. If it's unrelated to the task, ignore it and generate a new spec.
+- **An existing spec** in the conversation — user-written, generated earlier, or supplied via `$ARGUMENTS` — is used as-is too, preserving the original filename when it came from a file.
+- **Otherwise generate one, free-form.** No required structure or fixed sections: write whatever best conveys the change to the agent implementing it — the intent and the implementation approach or steps, shaped to the task rather than forced into headings. The AC are passed separately and the backend folds them in; don't hand-embed them.
 
 ## Step 2: Review with the user
 
-Before submitting, show the user three things and get their sign-off:
+Show three things and get sign-off:
 
-1. **The intent** — the short intent message, for grounding.
-2. **The Acceptance Criteria** — run the review loop below, iterating until the user explicitly confirms.
-3. **Any pertinent questions or callouts** — while writing the free-form spec, notice anything the user should weigh in on before submitting: a consequential choice (a new dependency, a data migration, a public API change, an area to leave untouched), an ambiguity in the approach, or a decision you made that they haven't seen. Raise only what's genuinely open — if the approach was already settled earlier in this session, don't re-litigate it.
+1. **The intent**, for grounding.
+2. **The Acceptance Criteria**, through the loop below.
+3. **Pertinent questions or callouts** — anything the user should weigh in on before submitting: a consequential choice (new dependency, data migration, public API change, an area to leave untouched), an ambiguity in the approach, or a decision you made that they haven't seen. Only what's genuinely open; don't re-litigate what this session already settled.
 
 The AC review loop:
 
-- **On the first showing, preface the AC with a one-line primer** so a user unfamiliar with the term knows what they're reviewing — something like: *"Acceptance Criteria are the code-anchored behaviors this change must satisfy — each one is verified independently. Please review whether these are the right ones."* Adjust the wording to feel natural; always include a primer the first time, skip it on re-shows.
-- **Ask one direct question** — something like: *"Do these AC cover what you care about — anything to add, remove, or tighten?"* Keep it to a single question.
-- **Apply the feedback** — add missing criteria, remove redundant ones, tighten vague ones, split bundled ones. Re-show the updated list, calling out what changed since the previous round, and ask again.
-- **Repeat until the user explicitly confirms.** A simple "yes" or "go ahead" is enough. Do not submit on silence or an implied yes.
-- **If invoked non-interactively** (no user available to confirm — e.g. an automated or orchestrated run), treat the generated AC as pre-confirmed and note in your output that the confirmation step was skipped.
+- **Primer on the first showing**, so an unfamiliar user knows what they're reading: *"Acceptance Criteria are the code-anchored behaviors this change must satisfy — each one is verified independently. Are these the right ones?"* Natural wording, first time only.
+- **Ask one direct question.** *"Anything to add, remove, or tighten?"*
+- **Apply the feedback** — add, remove, tighten, split. Re-show, call out what changed, ask again.
+- **Repeat until the user explicitly confirms.** "Yes" or "go ahead" is enough. Never submit on silence or an implied yes.
+- **Non-interactive run** (no user available): treat the AC as pre-confirmed, and note in your output that confirmation was skipped.
 
 ## Step 3: Create the Runbook
 
-**Only submit after the user has explicitly confirmed in Step 2.** Do not submit a spec the user hasn't asked for.
+**Only after the user confirmed in Step 2.**
 
-### Preflight — the `aviator` CLI must be installed and configured
+### Preflight
 
-- **Check it's installed:** `command -v aviator`. If it's missing, tell the user to install it and stop — don't attempt a workaround:
-
-  ```bash
-  go install github.com/aviator-co/aviator-cli/cmd/aviator@latest
-  ```
-
-- **Check it's current:** run `aviator runbook --help` and confirm it shows `--spec` and `--criteria-file`. If they're missing, the installed CLI predates spec/criteria support on runbooks — tell the user to upgrade and stop. (`aviator verify` gained these flags earlier, so their presence there does not imply support on `runbook`.)
-- **Check it's configured:** the CLI needs an API token, via the `AVIATOR_API_TOKEN` environment variable or `~/.config/aviator/config.yaml` (with an optional `AVIATOR_API_HOST` / `apiHost` override for on-prem). If a submit fails with an auth/config error, point the user at these — don't try to work around missing credentials.
+- **Installed:** `command -v aviator`. If missing, tell the user to install it and stop — no workarounds: `go install github.com/aviator-co/aviator-cli/cmd/aviator@latest`
+- **Current:** `aviator runbook --help` must show `--spec` and `--criteria-file`. If it doesn't, the CLI predates spec/criteria support on runbooks — tell the user to upgrade and stop. (`aviator verify` gained these flags earlier, so their presence there proves nothing about `runbook`.)
+- **Configured:** an API token via `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml` (optional `AVIATOR_API_HOST` / `apiHost` for on-prem). On an auth or config error, point the user there rather than working around it.
 
 ### Deriving the repo
 
-`--repo` is the canonical `owner/repo` the PR will target. Getting this wrong is silent — a wrong-but-well-formed name is accepted and binds the submission to a repo no PR will ever link back to — so derive it in two steps:
+`--repo` is the canonical `owner/repo` the PR targets. Getting it wrong is silent — a well-formed wrong name is accepted, binding the submission to a repo no PR will ever link back to. Two steps:
 
-1. **Pick the remote PRs are opened against.** `git remote -v`; with one remote, that's it. With several, don't assume `origin`, and don't rely on the working branch's upstream — a fresh branch hasn't been pushed yet and has none. Look at where the repo's existing PRs actually target (`gh pr list --limit 3` on the candidates) or what recent work branches track; a personal fork loses to the org repo. If the evidence genuinely splits across two *different* repos, ask the user; running non-interactively, pick the org repo and flag the choice in your output.
-2. **Canonicalize the pick through GitHub:** `gh api repos/<owner>/<repo> --jq .full_name` and pass exactly the `full_name` returned. Renamed repos redirect silently, so two remote URLs can be one repo under an old and new name — and Aviator records the stale and current names as *different* repos, accepting the stale one without complaint.
+1. **Pick the remote PRs open against.** `git remote -v`; one remote settles it. With several, don't assume `origin` and don't trust the working branch's upstream, since a fresh branch has none. Check where existing PRs target (`gh pr list --limit 3` per candidate) or what recent work branches track; a personal fork loses to the org repo. If the evidence splits across two *different* repos, ask; non-interactively, take the org repo and flag the choice.
+2. **Canonicalize through GitHub:** `gh api repos/<owner>/<repo> --jq .full_name`, and pass exactly that. Renames redirect silently, so two remote URLs can be one repo under an old and a new name — and Aviator records the stale and current names as *different* repos, accepting the stale one without complaint.
 
 ### The invocation
 
-**Pass the confirmed AC through the `--criteria`/`--criteria-file` flags — do not embed them in the spec markdown.** They're a first-class input; the spec carries intent and supporting context, not the AC.
+- `--intent` **(required)** — what the runbook should accomplish and why, short and human-friendly. The implementation detail travels in the spec.
+- `--spec` (optional) — the spec file, if one was generated or already existed; always a single file. Pass an on-disk file directly, otherwise write it to a temp path.
+- `--criteria` / `--criteria-file` (optional, recommended) — the confirmed AC, which the backend folds into the spec the agent works from. Mutually exclusive; `--criteria` repeats, but past 2–3 criteria use `--criteria-file` (one per line) to dodge shell quoting. The spec must carry no "Acceptance Criteria" section when you pass these — the backend rejects that combination rather than guess which list wins.
+- `--target-branch` (optional) — the base the runbook builds on and checks out, and what its generated PR opens against. Omit for the repo default. (Runbook mode generates its own PR, so there's no working branch to connect.)
+- `--title` (optional, worth setting) — a short deliberate title. Unset, the backend derives one from the intent by truncation, which reads poorly for multi-sentence intents.
 
-- `--intent`: **required** — the confirmed intent: what the runbook should accomplish and why. Keep it short and human-friendly; the implementation detail travels in the spec, and the intent is stored and displayed on the session as-is.
-- `--spec` (optional): the spec file — include only if one was generated or already existed; always a single file. If it already came from a file on disk, pass that file directly; otherwise write it to a temp path and pass that.
-- `--criteria` / `--criteria-file` (optional but recommended): the confirmed AC. The backend folds them into the spec the agent works from. `--criteria` is repeatable, but for more than 2–3 criteria prefer `--criteria-file <path>` — write one criterion per line to a file — to avoid shell-quoting issues with special characters. The two flags are mutually exclusive; pick one. Make sure the spec itself carries no "Acceptance Criteria" section when you pass these — the backend rejects that combination rather than guess which list wins.
-- `--target-branch` (optional): the base branch the runbook builds on and checks out; the generated PR opens against it. Omit for the repo default (trunk). (Runbook mode generates its own PR, so there's no working branch to connect here.)
-- `--title` (optional but worth setting): a short deliberate title for the runbook. Left unset, the backend derives one from the intent — currently by truncation, which reads poorly for multi-sentence intents.
+Never embed the AC in the spec markdown; they're a first-class input.
 
 ```bash
 aviator runbook \
@@ -99,36 +103,37 @@ aviator runbook \
   --criteria-file /path/to/criteria.txt
 ```
 
-On success it prints a confirmation to stdout — the first two lines are stable, and more detail lines may follow:
+Output, first two lines stable and more may follow:
 
 ```
 ✓ Runbook created: https://app.aviator.co/r/42
   Runbook #42
 ```
 
-Parse the URL and the `Runbook #<n>` number from that output. The URL's host is the Aviator app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. Treat the URL as the canonical **Runbook URL** for this session, and refer to the session as `r/<n>` (e.g. `r/42`) — that's the ID form every follow-up command takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42`. (They also accept a bare number or the full URL.)
+Parse the URL and the `Runbook #<n>`. The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the session's canonical **Runbook URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works).
 
-One timing note: `aviator show` returns a 400 "Runbook hasn't been generated yet" until step generation completes (it can take a few minutes). Right after submitting, that's expected — not a failed submission; retry later rather than treating it as an error.
+Timing: `aviator show` returns a 400 "Runbook hasn't been generated yet" until step generation finishes, which can take a few minutes. Right after submitting that's expected, not a failed submission — retry later.
 
-### Error handling
+### Errors
 
-- If the command fails with an authentication or configuration error, the CLI is missing a valid API token — point the user at `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml`. Don't retry blindly or work around it.
-- If the repository is not found in Aviator, suggest connecting it in the Aviator dashboard under GitHub settings.
-- If the command reports an error about credits, inform the user they may need to add runbook credits in their Aviator dashboard.
+- **Auth or config error** — no valid API token; point at `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml`. Don't retry blindly.
+- **Repository not found** — suggest connecting it in the Aviator dashboard under GitHub settings.
+- **Credits** — the user may need to add runbook credits in their dashboard.
 
-## Step 4: Return the link and set the PR directive
+## Step 4: Return the link and put it in the PR body
 
-Give the user the Runbook URL from the command's output and a brief summary of what was submitted.
+Give the user the Runbook URL and a brief summary of what was submitted.
 
-Then, **when opening a PR for this work later in the same session**, the PR body **MUST** begin with `Runbook: <runbook-url>` on its own line, followed by a blank line, then the rest of the description. This applies to `gh pr create`, `av pr`, or any equivalent.
+Any PR opened for this work in this session **MUST** open its body with `Runbook: <runbook-url>` on the first line, then a blank line, then the description — `gh pr create`, `av pr`, or equivalent.
 
-- **Prepend, don't replace.** The `Runbook:` line goes *above* any template, summary, or drafted body.
-- **Exact format.** `Runbook: <runbook-url>` on its own line. Plain text — no markdown link, no emoji. Keep it greppable.
-- **Body only, not title.** Never put the URL in the PR title, commit messages, or branch names.
-- **Scope.** Applies only to PRs that implement *this* submission's work in *this* session.
-- **New PRs only.** If a PR for this work already exists when the command runs, leave it alone.
+- **Prepend, don't replace.** The line goes *above* any template, summary, or drafted body.
+- **Exact format**, plain text, no markdown link or emoji. Keep it greppable.
+- **Body only** — never the title, commit messages, or branch names.
+- **Already open? Backfill it.** Read the existing body and insert the line at the top: the result is `Runbook: <runbook-url>`, a blank line, then the body exactly as it was. Edit additively and never regenerate the body — stacked-PR tools embed tracking metadata there, which a rebuilt body drops silently. Use whatever mechanism your tooling gives you for an in-place body update, following that tool's own skill or docs, and read the body back to confirm the line landed before reporting the PR as connected.
+- **Why it matters.** A runbook session carries no working branch, so **the URL line is the only auto-link path** — there's no branch match to fall back on. On an already-open PR the edit is also what fires the linking event: that webhook fires on opened, edited and ready_for_review, but not on pushes.
+- **Scope.** Only PRs implementing *this* submission's work in *this* session. PRs that pre-date the session, or belong to someone else, stay untouched.
 
-The expected PR body shape:
+Expected shape:
 
 ```
 Runbook: <runbook-url>
