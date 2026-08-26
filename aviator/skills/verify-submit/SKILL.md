@@ -128,8 +128,8 @@ Resubmitting a branch that already has a session creates a duplicate rather than
 
 ### Preflight
 
-- **Installed:** `command -v aviator`. If missing, tell the user to install it and stop — no workarounds: `go install github.com/aviator-co/aviator-cli/cmd/aviator@latest`
-- **Configured:** an API token via `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml` (optional `AVIATOR_API_HOST` / `apiHost` for on-prem). On an auth or config error, point the user there rather than working around it.
+- **Installed:** `command -v aviator`. If missing, tell the user to install it and stop — no workarounds: `brew trust aviator-co/tap && brew install aviator-co/tap/aviator` (`brew trust` is required on Homebrew 6+).
+- **Signed in:** the user runs `aviator login`, a browser flow storing the session in their OS keychain. On an auth error, tell them to run it rather than working around it.
 
 ### Deriving the repo
 
@@ -173,7 +173,7 @@ Parse the URL and the `Runbook #<n>`. The URL's host is whatever app the backend
 
 ### Errors
 
-- **Auth or config error** — no valid API token; point at `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml`. Don't retry blindly.
+- **Auth error** — no valid credentials; tell the user to run `aviator login`. Don't retry blindly.
 - **Repository not found** — suggest connecting it in the Aviator dashboard under GitHub settings.
 - **Credits** — the user may need to add runbook credits in their dashboard.
 
