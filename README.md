@@ -94,7 +94,7 @@ Submits specs from Claude Code to Aviator — [Runbooks](https://aviator.co/runb
 
 - An Aviator account at https://app.aviator.co
 - Repository connected to Aviator
-- The `aviator` CLI installed (`go install github.com/aviator-co/aviator-cli/cmd/aviator@latest`) and configured with an API token (`AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml`)
+- The `aviator` CLI installed (`brew trust aviator-co/tap && brew install aviator-co/tap/aviator`, where `brew trust` is required on Homebrew 6+) and signed in with `aviator login`
 
 **Self-hosted / On-prem:** The CLI talks to `https://api.aviator.co` by default. To point it at a self-hosted instance, set `AVIATOR_API_HOST` (or `apiHost` in `~/.config/aviator/config.yaml`):
 
@@ -111,8 +111,8 @@ export AVIATOR_API_HOST=https://aviator.your-company.com
 /plugin marketplace add aviator-co/agent-plugins
 
 # Install plugins
-/plugin install av-cli
-/plugin install aviator
+/plugin install av-cli@aviator-plugins
+/plugin install aviator@aviator-plugins
 ```
 
 ### Manual Installation
@@ -158,7 +158,7 @@ If a user isn't seeing the latest plugin version after updating, they can manual
 rm -rf ~/.claude/plugins/cache/aviator-plugins/av-cli
 ```
 
-Then run `/plugin install av-cli` again.
+Then run `/plugin install av-cli@aviator-plugins` again.
 
 ## Contributing
 

@@ -74,9 +74,9 @@ The AC review loop:
 
 ### Preflight
 
-- **Installed:** `command -v aviator`. If missing, tell the user to install it and stop — no workarounds: `go install github.com/aviator-co/aviator-cli/cmd/aviator@latest`
+- **Installed:** `command -v aviator`. If missing, tell the user to install it and stop — no workarounds: `brew trust aviator-co/tap && brew install aviator-co/tap/aviator` (`brew trust` is required on Homebrew 6+).
 - **Current:** `aviator runbook --help` must show `--spec` and `--criteria-file`. If it doesn't, the CLI predates spec/criteria support on runbooks — tell the user to upgrade and stop. (`aviator verify` gained these flags earlier, so their presence there proves nothing about `runbook`.)
-- **Configured:** an API token via `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml` (optional `AVIATOR_API_HOST` / `apiHost` for on-prem). On an auth or config error, point the user there rather than working around it.
+- **Signed in:** the user runs `aviator login`, a browser flow storing the session in their OS keychain. On an auth error, tell them to run it rather than working around it.
 
 ### Deriving the repo
 
@@ -116,7 +116,7 @@ Timing: `aviator show` returns a 400 "Runbook hasn't been generated yet" until s
 
 ### Errors
 
-- **Auth or config error** — no valid API token; point at `AVIATOR_API_TOKEN` or `~/.config/aviator/config.yaml`. Don't retry blindly.
+- **Auth error** — no valid credentials; tell the user to run `aviator login`. Don't retry blindly.
 - **Repository not found** — suggest connecting it in the Aviator dashboard under GitHub settings.
 - **Credits** — the user may need to add runbook credits in their dashboard.
 
