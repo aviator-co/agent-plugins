@@ -45,15 +45,23 @@ Then, per PR: its own invocation and `--working-branch`; its own **intent**, wha
 
 ### Which branches already have a session
 
-Ask **once**, here, as soon as the branch list is settled — before any submission and before any PR is created. Batch it into a single question covering every branch: *"Were any of these branches already submitted to Verify?"* listing them. One question for a four-PR stack, not four.
+Look it up **once**, here, as soon as the branch list is settled, before any submission and before any PR is created:
 
-This matters because **resubmitting doesn't refresh a session, it creates a duplicate** — and two active sessions on the same (user, repo, working branch) disable auto-linking for that branch entirely. The CLI has no session-lookup command, so asking is the only way to see a session created in another conversation or from the dashboard. (When a lookup lands, run it here and only ask about branches it can't account for.)
+```bash
+aviator sessions --repo <owner/repo> --json
+```
+
+One call covers the whole stack: match each session's `working_branch` against your branch list. `--branch <branch>` narrows to one branch, `--pr <number>` finds the session behind an open PR. If the CLI rejects `sessions` as an unknown command, it's older than the lookup, so tell the user to upgrade and ask them instead.
+
+This matters because **resubmitting doesn't refresh a session, it creates a duplicate**, and two active sessions on the same (user, repo, working branch) disable auto-linking for that branch entirely.
+
+Ask the user only about what the lookup can't settle: a session listed with **no working branch** was submitted without one, so it could belong to any branch here. Name it and ask.
 
 ### The branch map
 
 Keep a **branch → `r/<n>` map**, with every branch marked **submit** or **edit**:
 
-- Branches the user named, and branches already submitted earlier in this conversation, are **edit** entries — carry their `r/<n>` if known, otherwise resolve it before Step 8.
+- Branches the lookup found a session for, branches the user named, and branches already submitted earlier in this conversation are **edit** entries. Carry their `r/<n>`, which the lookup gives you.
 - Everything else is **submit**.
 
 Steps 5, 7 and 8 all read from this map; nothing downstream asks the user about sessions again.
@@ -205,8 +213,8 @@ AC are a living contract. As commits land, the code drifts from what the user si
 
 After any meaningful change on a branch, pushed or still local (new behavior, a changed contract, scope added or dropped — not a typo fix):
 
-1. **Find the session that owns that branch** in the Step 2 map. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
-2. **Read the current version:** `aviator results r/<n> --json`, and note `runbook_version` (an int). (`aviator show r/<n> --json` returns the full session; `results` is the lighter call.)
+1. **Find the session that owns that branch** in the Step 2 map, or with `aviator sessions --repo <owner/repo> --branch <branch> --json` in a conversation that never built one. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
+2. **Read the current version:** the step 1 lookup returns `runbook_version` (an int). Coming from the map instead, `aviator results r/<n> --json` has it.
 3. **Compare the AC against that branch's current diff** — its own contribution, against its parent. Code doing something the AC don't cover, or an AC no longer matching the code, means stale.
 4. **Replace them:** `aviator edit r/<n> --expected-version <version> --criteria-file <path>`. The edit **replaces the entire list**, so the file must hold the COMPLETE new list including unchanged items, in order — add, update, remove and reorder in one atomic edit. On a 409 stale-version error someone else moved the runbook: re-read the version and retry, since a stale edit writes nothing.
 5. **Hold the Step 3 quality bar**, and keep the user in the loop on non-trivial changes rather than silently rewriting their signed-off list.
