@@ -29,7 +29,7 @@ Draw everything below from what the code does, cross-checked against `$ARGUMENTS
 
 ## Step 2: Determine the units of verification
 
-**One Verify session per PR.** A session binds to exactly one PR: the backend refuses a second, and two active sessions claiming the same (user, repo, working branch) disable auto-linking for that branch entirely. **N PRs means N `aviator verify` invocations.** Settle the count before writing anything.
+**One Verify session per PR.** A session binds to exactly one PR, and resubmitting a branch that already has a session is not supported. **N PRs means N `aviator verify` invocations.** Settle the count before writing anything.
 
 Detect the shape of the work, not the tool — people stack with `av`, Graphite, `gh`, or plain `git`:
 
@@ -45,26 +45,13 @@ Then, per PR: its own invocation and `--working-branch`; its own **intent**, wha
 
 ### Which branches already have a session
 
-Look it up **once**, here, as soon as the branch list is settled, before any submission and before any PR is created:
+Before any submission or PR, one call per branch, batched:
 
 ```bash
-aviator sessions --repo <owner/repo> --json
+aviator sessions --repo <owner/repo> --branch <branch> --json
 ```
 
-One call covers the whole stack: match each session's `working_branch` against your branch list. `--branch <branch>` narrows to one branch, `--pr <number>` finds the session behind an open PR. If the CLI rejects `sessions` as an unknown command, it's older than the lookup, so tell the user to upgrade and ask them instead.
-
-This matters because **resubmitting doesn't refresh a session, it creates a duplicate**, and two active sessions on the same (user, repo, working branch) disable auto-linking for that branch entirely.
-
-Ask the user only about what the lookup can't settle: a session listed with **no working branch** was submitted without one, so it could belong to any branch here. Name it and ask.
-
-### The branch map
-
-Keep a **branch → `r/<n>` map**, with every branch marked **submit** or **edit**:
-
-- Branches the lookup found a session for, branches the user named, and branches already submitted earlier in this conversation are **edit** entries. Carry their `r/<n>`, which the lookup gives you.
-- Everything else is **submit**.
-
-Steps 5, 7 and 8 all read from this map; nothing downstream asks the user about sessions again.
+Empty means no session, so that branch gets `aviator verify` (Step 6). A branch that has one gets `aviator edit` (Step 8), never a second `verify`. Same for a branch the user says was already submitted.
 
 ## Step 3: Write the intent, the spec, and the Acceptance Criteria
 
@@ -123,12 +110,7 @@ Show the **intent** line and the **AC** — not the spec body, since Key Decisio
 
 ## Step 5: Submit-or-edit guard
 
-A mechanical guard, run per branch immediately before submitting it. **Consult the Step 2 map only — don't ask the user anything here**, that question was already asked and answered when the branch list was settled.
-
-- Marked **edit**, or already carrying an `r/<n>` from earlier in this conversation: **do not submit.** Refresh its criteria with `aviator edit` (Step 8) and move on.
-- Marked **submit**: proceed.
-
-Resubmitting a branch that already has a session creates a duplicate rather than refreshing it, and two active sessions on the same (user, repo, working branch) disable auto-linking for that branch entirely — hence the guard, even though Step 2 should already have caught it.
+Immediately before submitting a branch, re-check the Step 2 answer for it: a branch that already has a session goes to `aviator edit` (Step 8), never a second `aviator verify`. Don't ask the user, that was settled in Step 2.
 
 ## Step 6: Submit
 
@@ -177,7 +159,7 @@ Output, first two lines stable and more may follow:
   Criteria: 4
 ```
 
-Parse the URL and the `Runbook #<n>`. The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the branch's canonical **Runbook URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works). Record it against its branch in the map.
+Parse the URL and the `Runbook #<n>`. The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the branch's canonical **Runbook URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works).
 
 ### Errors
 
@@ -193,7 +175,7 @@ Every PR carrying this work **MUST** open its body with `Runbook: <runbook-url>`
 
 - **Exact format**, plain text, no markdown link or emoji. Keep it greppable.
 - **Body only** — never the title, commit messages, or branch names.
-- **One URL per PR, from the Step 2 map.** Cross-wiring two PRs in a stack is worse than omitting the line.
+- **One URL per PR.** Cross-wiring two PRs in a stack is worse than omitting the line.
 
 **PR not open yet:** prepend the line when you create it (`gh pr create`, `av pr`, or equivalent), above any template or drafted body.
 
@@ -213,12 +195,12 @@ AC are a living contract. As commits land, the code drifts from what the user si
 
 After any meaningful change on a branch, pushed or still local (new behavior, a changed contract, scope added or dropped — not a typo fix):
 
-1. **Find the session that owns that branch** in the Step 2 map, or with `aviator sessions --repo <owner/repo> --branch <branch> --json` in a conversation that never built one. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
-2. **Read the current version:** the step 1 lookup returns `runbook_version` (an int). Coming from the map instead, `aviator results r/<n> --json` has it.
+1. **Find the session that owns that branch**, with `aviator sessions --repo <owner/repo> --branch <branch> --json` if this conversation didn't submit it. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
+2. **Read the current version:** `runbook_version` (an int), from that lookup or `aviator results r/<n> --json`.
 3. **Compare the AC against that branch's current diff** — its own contribution, against its parent. Code doing something the AC don't cover, or an AC no longer matching the code, means stale.
 4. **Replace them:** `aviator edit r/<n> --expected-version <version> --criteria-file <path>`. The edit **replaces the entire list**, so the file must hold the COMPLETE new list including unchanged items, in order — add, update, remove and reorder in one atomic edit. On a 409 stale-version error someone else moved the runbook: re-read the version and retry, since a stale edit writes nothing.
 5. **Hold the Step 3 quality bar**, and keep the user in the loop on non-trivial changes rather than silently rewriting their signed-off list.
 
 Work reparented between branches in a stack usually means **two** sessions need editing.
 
-Never re-run `aviator verify` to refresh AC — that creates a second session on the branch and breaks its auto-linking. Use `aviator edit`.
+Never re-run `aviator verify` to refresh AC. Use `aviator edit`.
