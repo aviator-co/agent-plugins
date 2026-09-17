@@ -11,6 +11,8 @@ Verify checks whether the intent was accomplished, using code scans and behavior
 - **Key decisions & architecture** — the decisions made and the shape of the change, so a reviewer understands the PR without reading every line.
 - **Acceptance Criteria** — the concrete, observable behaviors the change must satisfy.
 
+Run /verify-submit before opening the PR. If the user asks for a PR first, the criteria come first and the PR follows their confirmation.
+
 > Want Aviator's agent to write the code instead? That's `/create-runbook`, and only if the user asked for that hand-off.
 
 ## Arguments
@@ -97,6 +99,8 @@ The decisions made and why, architectural changes, anything that would surprise 
 
 Intent always. Key Decisions whenever the change has non-trivial reasoning behind it, which is nearly always.
 
+Small changes get the same flow in less space: intent, two or three criteria, no spec file.
+
 ## Step 4: Review the Acceptance Criteria with the user
 
 Show the **intent** line and the **AC** — not the spec body, since Key Decisions is supporting context rather than something the user confirms.
@@ -177,9 +181,9 @@ Every PR carrying this work **MUST** open its body with `Runbook: <runbook-url>`
 - **Body only** — never the title, commit messages, or branch names.
 - **One URL per PR.** Cross-wiring two PRs in a stack is worse than omitting the line.
 
-**PR not open yet:** prepend the line when you create it (`gh pr create`, `av pr`, or equivalent), above any template or drafted body.
+**The PR comes after the session:** prepend the line when you create it (`gh pr create`, `av pr`, or equivalent), above any template or drafted body.
 
-**PR already open:** backfill it now, don't wait for the next push. The linking webhook fires on **opened, edited, and ready_for_review — not on pushes**, so on an open PR the body edit both supplies the priority link target and fires the event that performs the link. Skip it and the PR stays unlinked until some incidental edit happens to trigger the webhook.
+**Recovery only, when a PR already exists:** reaching this path means the PR was opened out of order — say so to the user rather than repairing it quietly. Backfill it now, don't wait for the next push. The linking webhook fires on **opened, edited, and ready_for_review — not on pushes**, so on an open PR the body edit both supplies the priority link target and fires the event that performs the link. Skip it and the PR stays unlinked until some incidental edit happens to trigger the webhook.
 
 The contract, whatever mechanism you reach for:
 
