@@ -165,7 +165,7 @@ Parse the URL and the `r/<n>` ID (older CLI versions print `Runbook #<n>` there;
 
 - **Auth error** — no valid credentials; tell the user to run `aviator login`. Don't retry blindly.
 - **Repository not found** — suggest connecting it in the Aviator dashboard under GitHub settings.
-- **Run limits** — the account may have used up its Verify runs for the cycle; the user can check usage in their dashboard.
+- **Verify not enabled** (403 `verify-not-enabled`) — Verify isn't turned on for this account. Tell the user and stop; don't retry.
 
 ## Step 7: Return the link and put it in the PR body
 
