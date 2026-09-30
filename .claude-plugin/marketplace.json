@@ -18,7 +18,7 @@
       "name": "aviator",
       "source": "./aviator",
       "description": "Verify and Runbooks workflow automation via the aviator CLI",
-      "version": "1.6.0"
+      "version": "1.7.0"
     }
   ]
 }
