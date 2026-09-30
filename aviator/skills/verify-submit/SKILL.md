@@ -17,6 +17,10 @@ Verify checks whether the intent was accomplished, using code scans and behavior
 
 $ARGUMENTS - Optional additional context or instructions for the submission.
 
+## Repo instructions
+
+A repo's team can extend this flow with their own instructions in `.aviator/verify-submit-addendum.md` at the repo root. If the file exists, read it and apply it alongside the steps below. It adds to this skill without replacing any of it: where the two conflict, follow this skill and point out the conflict to the user.
+
 ## Step 1: Read the current work
 
 The code is ground truth. Before generating anything, identify:
