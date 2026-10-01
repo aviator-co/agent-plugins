@@ -43,7 +43,7 @@ Detect the shape of the work, not the tool — people stack with `av`, Graphite,
 
 Tool markers (`.git/av/av.db`, a Graphite config) corroborate, never decide — an av-initialized repo can still hold one plain branch off trunk. **When it's ambiguous, ask:** "one PR, or a stack?"
 
-Then, per PR: its own invocation and `--working-branch`; its own **intent**, what *that* PR contributes rather than the session's whole story retold; its own **AC**, scoped to its diff **against its parent** (a criterion the parent PR already satisfies doesn't belong on the child); its own `Runbook:` line.
+Then, per PR: its own invocation and `--working-branch`; its own **intent**, what *that* PR contributes rather than the session's whole story retold; its own **AC**, scoped to its diff **against its parent** (a criterion the parent PR already satisfies doesn't belong on the child); its own `Review:` line.
 
 `--target-branch` stays at the repo default even mid-stack: Verify deliberately diffs a stacked PR against its eventual merge target, not its immediate parent. Scope the AC to the PR's own contribution; leave the target alone.
 
@@ -157,25 +157,25 @@ Output, first two lines stable and more may follow:
 
 ```
 ✓ Verify submission created: https://app.aviator.co/r/42
-  Runbook #42
+  Review r/42
   Working branch: feature/banner
   Target branch:  main
   Criteria: 4
 ```
 
-Parse the URL and the `Runbook #<n>`. The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the branch's canonical **Runbook URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works).
+Parse the URL and the `r/<n>` ID (older CLI versions print `Runbook #<n>` there; the URL carries the same number either way). The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the branch's canonical **review URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works).
 
 ### Errors
 
 - **Auth error** — no valid credentials; tell the user to run `aviator login`. Don't retry blindly.
 - **Repository not found** — suggest connecting it in the Aviator dashboard under GitHub settings.
-- **Credits** — the user may need to add runbook credits in their dashboard.
+- **Verify not enabled** (403 `verify-not-enabled`) — Verify isn't turned on for this account. Tell the user and stop; don't retry.
 
 ## Step 7: Return the link and put it in the PR body
 
-Give the user each session's Runbook URL, branch by branch for a stack, with a brief summary of what was submitted.
+Give the user each session's review URL, branch by branch for a stack, with a brief summary of what was submitted.
 
-Every PR carrying this work **MUST** open its body with `Runbook: <runbook-url>` on the first line, then a blank line, then the description. **A PR links to a session by that body line first, falling back to a working-branch match only when it's absent** — the line is the reliable path, and the only one that survives a branch claimed by more than one session.
+Every PR carrying this work **MUST** open its body with `Review: <review-url>` on the first line, then a blank line, then the description. **A PR links to a session by that body line first, falling back to a working-branch match only when it's absent** — the line is the reliable path, and the only one that survives a branch claimed by more than one session.
 
 - **Exact format**, plain text, no markdown link or emoji. Keep it greppable.
 - **Body only** — never the title, commit messages, or branch names.
@@ -187,7 +187,7 @@ Every PR carrying this work **MUST** open its body with `Runbook: <runbook-url>`
 
 The contract, whatever mechanism you reach for:
 
-- **Read the existing body, then insert at the top.** The result is `Runbook: <url>`, a blank line, then the body exactly as it was — template sections, checklists, prose and trailing metadata all intact.
+- **Read the existing body, then insert at the top.** The result is `Review: <url>`, a blank line, then the body exactly as it was — template sections, checklists, prose and trailing metadata all intact.
 - **Edit additively, never regenerate the body.** Stacked-PR tools embed tracking metadata in the body, and a rebuilt body drops it silently, breaking the stack. Use whichever mechanism your tooling gives you for updating a PR body in place, and follow that tool's own skill or docs for the safe invocation.
 - **Confirm the line landed** by reading the body back before telling the user the PR is connected.
 
@@ -202,7 +202,7 @@ After any meaningful change on a branch, pushed or still local (new behavior, a 
 1. **Find the session that owns that branch**, with `aviator sessions --repo <owner/repo> --branch <branch> --json` if this conversation didn't submit it. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
 2. **Read the current version:** `runbook_version` (an int), from that lookup or `aviator results r/<n> --json`.
 3. **Compare the AC against that branch's current diff** — its own contribution, against its parent. Code doing something the AC don't cover, or an AC no longer matching the code, means stale.
-4. **Replace them:** `aviator edit r/<n> --expected-version <version> --criteria-file <path>`. The edit **replaces the entire list**, so the file must hold the COMPLETE new list including unchanged items, in order — add, update, remove and reorder in one atomic edit. On a 409 stale-version error someone else moved the runbook: re-read the version and retry, since a stale edit writes nothing.
+4. **Replace them:** `aviator edit r/<n> --expected-version <version> --criteria-file <path>`. The edit **replaces the entire list**, so the file must hold the COMPLETE new list including unchanged items, in order — add, update, remove and reorder in one atomic edit. On a 409 stale-version error someone else changed the session: re-read the version and retry, since a stale edit writes nothing.
 5. **Hold the Step 3 quality bar**, and keep the user in the loop on non-trivial changes rather than silently rewriting their signed-off list.
 
 Work reparented between branches in a stack usually means **two** sessions need editing.
