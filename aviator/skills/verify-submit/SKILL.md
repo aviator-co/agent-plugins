@@ -200,10 +200,11 @@ AC are a living contract. As commits land, the code drifts from what the user si
 After any meaningful change on a branch, pushed or still local (new behavior, a changed contract, scope added or dropped — not a typo fix):
 
 1. **Find the session that owns that branch**, with `aviator sessions --repo <owner/repo> --branch <branch> --json` if this conversation didn't submit it. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
-2. **Read the current version:** `runbook_version` (an int), from that lookup or `aviator results r/<n> --json`.
+2. **Read the current version:** `version` (an int), from that lookup or `aviator results r/<n> --json`.
 3. **Compare the AC against that branch's current diff** — its own contribution, against its parent. Code doing something the AC don't cover, or an AC no longer matching the code, means stale.
 4. **Replace them:** `aviator edit r/<n> --expected-version <version> --criteria-file <path>`. The edit **replaces the entire list**, so the file must hold the COMPLETE new list including unchanged items, in order — add, update, remove and reorder in one atomic edit. On a 409 stale-version error someone else changed the session: re-read the version and retry, since a stale edit writes nothing.
 5. **Hold the Step 3 quality bar**, and keep the user in the loop on non-trivial changes rather than silently rewriting their signed-off list.
+6. **Refresh the intent too when the scope shifted:** `aviator edit r/<n> --intent "..."`. An intent edit needs no version and can go in the same call as the criteria.
 
 Work reparented between branches in a stack usually means **two** sessions need editing.
 
