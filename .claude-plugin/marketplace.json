@@ -12,7 +12,7 @@
       "name": "av-cli",
       "source": "./av-cli",
       "description": "Stacked PR workflows with Aviator CLI",
-      "version": "1.5.3"
+      "version": "1.5.4"
     },
     {
       "name": "aviator",
