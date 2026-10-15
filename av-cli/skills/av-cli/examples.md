@@ -354,11 +354,8 @@ Create draft PRs and convert them when ready.
 # Create as draft
 av pr --draft -t "WIP: New feature"
 
-# Later, when ready for review
-av pr --edit
-# This opens editor - remove [draft] or update as needed
-
-# Or use GitHub UI / gh cli to convert from draft
+# Later, when ready for review: av can't mark it ready, so use the GitHub UI's
+# "Ready for review" button, or `gh pr ready` if gh is installed
 ```
 
 ## Example 13: Rebasing Stack onto Latest Main
@@ -540,7 +537,7 @@ av commit --amend -a
 | --- | --- |
 | `av sync` | `--push=yes` / `--push=no`, `--prune=yes` / `--prune=yes` |
 | `av pr` (new PR) | `--title "..."`, `--body "..."` |
-| `av pr` (existing PR) | No flags needed — bare `av pr` just pushes |
+| `av pr` (existing PR) | No flags needed — bare `av pr` just pushes. `--title`/`--body` replace only the field passed |
 | `av switch` | Pass branch name as argument |
 | `av adopt` | `--parent <parent>` |
 | `av commit --amend` | Default behavior (no `--no-edit` needed) |

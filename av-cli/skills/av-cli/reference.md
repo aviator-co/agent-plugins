@@ -169,10 +169,10 @@ av pr [flags]
 
 **Flags:**
 
-- `-t <title>, --title=<title>` - PR title (recommended: always specify to avoid prompts)
-- `-b <body>, --body=<body>` - PR body (recommended: always specify to avoid prompts; use `--body -` for stdin)
+- `-t <title>, --title=<title>` - PR title. Pass with `--body` to create a PR without an editor. On an existing PR it replaces the title, so omit it to keep the current one
+- `-b <body>, --body=<body>` - PR body (use `--body -` for stdin). On an existing PR it replaces the body, so omit it to keep the current one
 - `--draft` - Create as draft PR
-- `--edit` - Edit title/body of existing PR
+- `--edit` - Edit title/body of existing PR in an editor (interactive, agents pass `--title`/`--body` instead)
 - `--force` - Force create even if PR exists
 - `--no-push` - Don't push before creating PR
 - `--reviewers=<users>` - Comma-separated reviewers
@@ -183,7 +183,8 @@ av pr [flags]
 **Examples:**
 
 ```bash
-av pr --title "Add login" --body "Implements login flow"  # Non-interactive (recommended)
+av pr --title "Add login" --body "Implements login flow"  # Create PR non-interactively
+av pr --body "Implements login flow and logout"          # Existing PR: replace only the body
 av pr                                    # Create PR, opens editor (interactive)
 av pr --draft --title "WIP" --body "Work in progress"
 av pr --all                              # PRs for whole stack
@@ -192,7 +193,7 @@ av pr --reviewers alice,bob              # Add reviewers
 av pr --queue                            # Add to merge queue
 ```
 
-**Note:** When creating a new PR non-interactively, always pass `--title` and `--body` to avoid editor prompts. When the branch already has a PR, bare `av pr` simply pushes and syncs — no editor is opened, no flags needed.
+**Note:** When creating a new PR non-interactively, always pass `--title` and `--body` to avoid editor prompts. When the branch already has a PR, bare `av pr` simply pushes and syncs — no editor is opened, no flags needed. Pass `--title` or `--body` only to rewrite that field, anything omitted is kept.
 
 ### av pr-status
 
