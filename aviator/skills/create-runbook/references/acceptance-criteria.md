@@ -1,8 +1,8 @@
 # Acceptance Criteria — quality rulebook
 
-The shared quality bar for Acceptance Criteria (AC) in an Aviator submission, identical for **Verify** (`/verify-submit`) and **Runbooks** (`/create-runbook`). AC are the concrete checks that prove a change works correctly and fits the codebase — the test plan a reviewer would actually run. Some are programmatically testable (an endpoint returns 401, a command exits 0); others are behavioral, qualitative, or UX expectations. Both are valid as long as two reviewers would agree on whether the criterion is met. AC are the contract between intent and implementation, and the highest-value artifact in the spec.
+The shared quality bar for Acceptance Criteria (AC) in an Aviator submission, identical for **Verify** (`/verify-submit`) and **Runbooks** (`/create-runbook`). AC are the concrete checks that prove a change works correctly and fits the codebase — the test plan a reviewer would actually run. Some are programmatically testable (an endpoint returns 401, a command exits 0); others are behavioral, qualitative, or UX expectations. Both are valid as long as two reviewers would agree on whether the criterion is met. AC are the contract between intent and implementation, and the highest-value part of the submission.
 
-"The spec's supporting sections" below means the implementation Steps in a Runbook, or Key Decisions & Architecture in a Verify submission — wherever implementation detail lives for the flow you're in.
+"The spec's supporting sections" below means the implementation detail in a Runbook's spec. A Verify submission has none: there, implementation detail stays out of the submission entirely.
 
 ## Observable outcomes, not implementation
 
@@ -35,14 +35,18 @@ Functional issues **and** codebase-health issues (broken conventions, duplicated
 - **Functional correctness — the core of every list.** The change does the right thing: golden path, edge cases, failure modes, invariants. *"`divide(1, 0)` returns `Err(DivByZero)`"*.
 - **Codebase fit — only when it's a genuine gate.** The change sits well with existing code: reuses helpers instead of duplicating logic, matches established patterns, doesn't quietly change a public API or pull in a new dependency. *"Reuses `internal/retry.Backoff` instead of a new loop"*, *"no new entries in `package.json` dependencies"*. Skip this axis when the change has no such gate; don't manufacture one to fill a quota.
 
-## Sources — code over plan
+## Sources — code, decisions, then plan
 
 Never generate from imagination. Go read what's actually there, in this priority:
 
-- **The code in this session (primary).** The final code, not any original plan, is ground truth for what this change *does*. Read the modified files end to end, not just the diff hunks: what behavior each new or changed function introduces, what invariants it preserves, what public surface it exposes, what failure modes it handles, what it replaces or removes. Every behavior present in the code should map to an AC, and the current code must pass every AC you write.
-- **Existing spec, plan, or `$ARGUMENTS` (secondary — cross-check, don't copy blindly).** Mine them for must-haves, constraints, and explicit success criteria the user already endorsed, and preserve those. Use the plan to catch behavior the code *should* have but doesn't — that's a gap, not a pass. **When the plan and the code disagree, trust the code**, and surface the divergence so the user can confirm it was intentional. Never silently write an AC for behavior the code no longer implements.
+- **The code in this session (primary).** The final code, not any original plan, is ground truth for what this change *does*. Read the modified files end to end, not just the diff hunks: what behavior each new or changed function introduces, what invariants it preserves, what public surface it exposes, what failure modes it handles, what it replaces or removes. Every behavior change that passes the north-star test should map to an AC, and the current code must pass every AC you write. In a Runbook no code exists yet: the decisions lead, and the current code is the before-state.
+- **The decisions the session settled.** Choices and their reasons (the user's, or yours that they let stand), scope cuts, accepted risks, behavior to leave unchanged — mostly in the conversation, not the diff. They decide what the AC cover:
+  - A choice gets the outcome it produces gated, not the option picked, unless the option is itself a codebase-fit gate or the value is the deliverable.
+  - Work deliberately left for later gets no AC. Something deliberately left unchanged gets one if this diff could break it.
+  - An accepted risk is never gated, though the behavior around it can be.
+- **Existing spec, plan, or `$ARGUMENTS` (secondary — cross-check, don't copy blindly).** Mine them for must-haves, constraints, and explicit success criteria the user already endorsed, and preserve those. Use the plan to catch behavior the code *should* have but doesn't — that's a gap, not a pass. **When the plan and the code disagree, trust the code**, and surface the divergence so the user can confirm it was intentional, unless a decision in the session already explains it. Never silently write an AC for behavior the code no longer implements.
 
-If the code would fail one of your AC, either the AC is wrong or the change is incomplete. Flag the gap rather than papering over it.
+If the code would fail one of your AC, either the AC is wrong or the change is incomplete. Flag the gap rather than papering over it. Also flag code that goes against a decision, and open questions a decision raises that the session never answered.
 
 ## Rules for valuable AC
 
@@ -78,19 +82,19 @@ When the deliverable is *preserved* behavior — refactors, restyles, migrations
 - Bad (mechanism-led): "Inbound SMS for unpaid customers is dropped at `/api/sms/inbound` before `process_sms` is enqueued."
 - Good (outcome-led): "Inbound SMS for unpaid customers is accepted with HTTP 200 but produces no auto-replies, inbox entries, or downstream automation."
 
-  When a value or identifier IS the externally observable contract — an HTTP status code, a public API field name, a customer-facing CLI flag, a documented config key — keep it. The rule targets internal mechanism leaking into AC, not all technical specifics.
+  When a value or identifier IS the externally observable contract — an HTTP status code, a public API field name, a customer-facing CLI flag, a documented config key — keep it, and likewise the shared helper a codebase-fit gate is about. The rule targets internal mechanism leaking into AC, not all technical specifics.
 
 **Internal data shapes or private structures.**
 - Bad: "The `User` class has a `roles` list attribute."
 - Good: "Authenticated users receive the roles assigned to their account in API responses."
 
 **Implementation-detail numerics that are noise to the human reader** — pixel breakpoints, exact rem values, hex/rgba colors, exact font weights.
-- **Don't invent specifics the change did not require.** Spec said "service retries on transient failures": bad AC, "retries up to 3 times with 100ms backoff"; good AC, "Service retries on transient failures."
+- **Don't invent specifics the change did not require.** The plan said "service retries on transient failures": bad AC, "retries up to 3 times with 100ms backoff"; good AC, "Service retries on transient failures."
 - **Prefer the abstract level even when a value exists**, but stop before abstract becomes subjective taste. When the value IS the contract, keep it verbatim ("API returns 429 when rate-limited"); when it's incidental, name its role ("Badges use the brand accent color").
 
 **Build, lint, type-check, format or CI gates — never an AC.** "Typecheck passes", "lint is clean", "CI is green", "all tests pass" are the pipeline's job and tell a reviewer nothing about whether the feature works. The one adjacent valid case is a deliberate regression guard on behavior *this change could plausibly break*, phrased as the behavior rather than as "the test suite passes".
 
-**Implementation choices and tradeoffs we made.** Decisions reached while building — an icon instead of a text label, a fallback format kept for older targets — are *how* the feature was built, not gates on *what* it does. They belong in the spec's supporting sections. An AC states the user-visible outcome, not the option picked to reach it.
+**Implementation choices and tradeoffs we made.** Decisions reached while building — an icon instead of a text label, a fallback format kept for older targets — are *how* the feature was built, not gates on *what* it does. Gate the outcome they produce, per the decision rules under Sources.
 
 ### When the value IS the deliverable
 

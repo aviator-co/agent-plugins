@@ -1,15 +1,17 @@
 ---
 name: verify-submit
-description: Submit a spec to Aviator for Verify — intent, key decisions, and acceptance criteria for code the user writes themselves; Aviator verifies each PR against the criteria. Use for "submit a spec", "spec submit", "submit this to Aviator", "send this to Verify", "write acceptance criteria", to refresh the criteria on an existing Verify session as the PR evolves — including stacked work, where each PR gets its own session — or to read Verify results and handle a failing or inconclusive run. The default Aviator spec flow: use this unless the user explicitly asked Aviator's agent to write the code.
+description: Submit a PR's intent and acceptance criteria to Aviator for Verify, for code the user writes themselves; Aviator verifies each PR against the criteria. Use for "submit a spec", "spec submit", "submit this to Aviator", "send this to Verify", "write acceptance criteria", to refresh the criteria on an existing Verify session as the PR evolves — including stacked work, where each PR gets its own session — or to read Verify results and handle a failing or inconclusive run. The default Aviator submission flow: use this unless the user explicitly asked Aviator's agent to write the code.
 ---
 
 # Submit for Verify
 
-Verify checks whether the intent was accomplished, using code scans and behavior observations; the implementation stays with the author. The first run happens when the PR is marked ready for review, or when started with `aviator verify r/<n>`. This flow captures three things and nothing more:
+Verify checks whether the intent was accomplished, using code scans and behavior observations; the implementation stays with the author. Per PR, this flow outputs exactly:
 
 - **Intent** — what this change accomplishes and why.
-- **Key decisions & architecture** — the decisions made and the shape of the change, so a reviewer understands the PR without reading every line.
 - **Acceptance Criteria** — the concrete, observable behaviors the change must satisfy.
+- **A Verify session bound to the PR** — through its working branch and the `Review:` line in the PR body.
+
+Decisions made along the way shape the intent and AC; they aren't submitted.
 
 Run /verify-submit before opening the PR. If the user asks for a PR first, the criteria come first and the PR follows their confirmation.
 
@@ -28,10 +30,11 @@ A repo's team can extend this flow with their own instructions in `.aviator/veri
 The code is ground truth. Before generating anything, identify:
 
 - **Working branch(es)** — where the in-flight work lives (usually the current branch; a stack has one per PR, settled in Step 2). Each becomes a `--working-branch`.
-- **The repository** in `owner/repo` form — derive it with the Step 6 procedure, not by reading `origin`.
+- **The repository** in `owner/repo` form — derive it with the Step 5 procedure, not by reading `origin`.
 - **The current changes, end to end** — the diff plus the modified files in full, not just the hunks. Know what behavior each change introduces, what invariants it preserves, what it exposes, what failure modes it handles, what it replaces. For a stacked branch, read its diff **against its parent** — that's what its PR contributes.
+- **The decisions** the session settled, as the Sources section of [references/acceptance-criteria.md](references/acceptance-criteria.md) defines them. In a stack, each belongs to the PR whose diff carries it.
 
-Draw everything below from what the code does, cross-checked against `$ARGUMENTS` and any spec or plan already in the session. Never from imagination.
+Draw everything below from what the code does and those decisions, cross-checked against `$ARGUMENTS` and any spec or plan already in the session. Never from imagination.
 
 ## Step 2: Determine the units of verification
 
@@ -57,72 +60,48 @@ Before any submission or PR, one call per branch, batched:
 aviator sessions --repo <owner/repo> --branch <branch> --json
 ```
 
-Empty means no session, so that branch gets `aviator verify` (Step 6). A branch that has one gets `aviator edit` (Step 8), never a second `verify`. Same for a branch the user says was already submitted.
+Empty means no session, so that branch gets `aviator verify` (Step 5). A branch that has one gets `aviator edit` (Step 7), never a second `verify`. Same for a branch the user says was already submitted.
 
-## Step 3: Write the intent, the spec, and the Acceptance Criteria
+## Step 3: Write the intent and the Acceptance Criteria
 
-Per PR — one intent, one spec, one criteria list each, drawn from that PR's own diff.
+Per PR — one intent and one criteria list, drawn from that PR's own diff and decisions.
 
 ### The intent
 
-`--intent`: a few sentences at most, the way you'd describe the change to a colleague filing a ticket. No markdown, no file paths, no code details. Stored verbatim and displayed as the session's intent, so hold the quality bar even though the spec carries the detail. If the user gave `$ARGUMENTS`, echo their words rather than rephrasing them technically.
+`--intent`: a few sentences at most, the way you'd describe the change to a colleague filing a ticket. No markdown, no file paths, no code details. Stored verbatim and displayed as the session's intent, so hold the quality bar. Its *why* usually comes from the decision that started the change. Echo the user's words, from `$ARGUMENTS` or the conversation, rather than rephrasing them technically.
 
 Good:
 > Add rate limiting to the public API so a single client can't exhaust capacity, returning 429 with a retry hint once the per-client budget is spent.
 
-Bad (belongs in the spec):
+Bad:
 > Add `RateLimiter` middleware in `api/middleware.py`, wire a Redis token bucket keyed by client ID, decrement in `before_request`...
 
 ### Acceptance Criteria are the primary output
 
-Prioritize AC quality over spec polish — sharp AC with a thin spec beat a lush spec with generic AC. They go through `--criteria`/`--criteria-file`, never embedded in the spec.
-
 **Blocking: read [references/acceptance-criteria.md](references/acceptance-criteria.md) before writing or reviewing any AC**, and apply it in full. Soft target of **3–6 per PR**; the rulebook governs what earns a slot.
 
-### Key Decisions & Architecture
+## Step 4: Review with the user
 
-Free-form prose — short paragraphs or bullets, whatever reads best. This is what a reviewer reads to *get* the change:
+Show three things and get sign-off:
 
-- **The decisions and their reasons.** "Token bucket over fixed window because bursts are expected." A decision without its why is noise.
-- **Architectural and data-model changes.** Schema and data-model changes explicitly, since they're easy to miss, plus new components, moved responsibilities, new boundaries or data flows.
-- **Anything that would surprise a reviewer.** A non-obvious tradeoff, a deliberate scope cut, a constraint that shaped the design, a follow-up left for later.
+1. **The intent**, for grounding.
+2. **The Acceptance Criteria**, through the loop below.
+3. **Callouts** — what the rulebook says to flag. Only what's genuinely open; don't re-litigate what the session already settled.
 
-Not a file-by-file walkthrough — "edited `foo.py`, then `bar.py`" is a changelog, and the diff already covers it. Not implementation minutiae: signatures, variable names, line-level logic, boilerplate. Aim at what a thoughtful reviewer needs to trust the change — the reasoning behind the diff, not the diff.
+The intent and AC are everything Verify receives; callouts stay in the conversation.
 
-### The spec file
-
-One file per PR, named `spec.md` — or the original filename if a spec already exists in the session, used as-is without restructuring. The body is **intent + key decisions**; the AC travel separately through their own flags.
-
-```
-## Intent
-What this change accomplishes and why. Brief — enough to make the rest make sense.
-
-## Key Decisions & Architecture
-The decisions made and why, architectural changes, anything that would surprise a reviewer.
-```
-
-Intent always. Key Decisions whenever the change has non-trivial reasoning behind it, which is nearly always.
-
-Small changes get the same flow in less space: intent, two or three criteria, no spec file.
-
-## Step 4: Review the Acceptance Criteria with the user
-
-Show the **intent** line and the **AC** — not the spec body, since Key Decisions is supporting context rather than something the user confirms.
+The AC review loop:
 
 - **Primer on the first showing**, so an unfamiliar user knows what they're reading: *"Acceptance Criteria are the code-anchored behaviors this change must satisfy — each one is verified independently. Are these the right ones?"* Natural wording, first time only.
-- **Multiple PRs: group by PR** — branch, that PR's one-line intent, then its criteria. Seeing the split is how the user catches a criterion sitting on the wrong PR.
-- **Ask one direct question.** *"Anything to add, remove, or tighten?"*
+- **Multiple PRs: group by PR** — branch, that PR's intent, its criteria, then its callouts. Seeing the split is how the user catches a criterion sitting on the wrong PR.
+- **End with one direct question.** *"Anything to add, remove, or tighten?"*
 - **Apply the feedback** — add, remove, tighten, split, or move a criterion to the PR it belongs on. Re-show, call out what changed, ask again.
 - **Repeat until the user explicitly confirms.** "Yes" or "go ahead" is enough. Never submit on silence or an implied yes.
-- **Non-interactive first submission** (no user available): treat the AC as pre-confirmed, and note in your output that confirmation was skipped. This covers the first submission only; later changes need a user (Step 9).
+- **Non-interactive first submission** (no user available): treat the AC as pre-confirmed, and note in your output that confirmation was skipped. This covers the first submission only; later changes need a user (Step 8).
 
-## Step 5: Submit-or-edit guard
+## Step 5: Submit
 
-Immediately before submitting a branch, re-check the Step 2 answer for it: a branch that already has a session goes to `aviator edit` (Step 8), never a second `aviator verify`. Don't ask the user, that was settled in Step 2.
-
-## Step 6: Submit
-
-**Only after the user confirmed in Step 4.**
+**Only after the user confirmed in Step 4, and only for a branch Step 2 found without a session** — one that has a session goes to `aviator edit` (Step 7).
 
 ### Preflight
 
@@ -144,21 +123,15 @@ For anything missing from the user's setup, point them at https://docs.aviator.c
 - `--intent` **(required)** — this PR's confirmed intent.
 - `--criteria` / `--criteria-file` **(required)** — this PR's confirmed AC, which Verify seeds its structured criteria set from. Mutually exclusive; `--criteria` repeats, but past 2–3 criteria use `--criteria-file` (one per line) to dodge shell quoting.
 - `--working-branch` **(required here)** — this PR's branch by name, from Step 2. The CLI marks it optional; without it no PR ever binds to the session.
-- `--spec` (optional) — the Step 3 spec file. Pass an on-disk file directly, otherwise write it to a temp path. Always a single file.
 - `--target-branch` (optional) — **omit it, mid-stack included** (Step 2).
-
-Never embed the AC in the spec markdown; they're a first-class input.
 
 ```bash
 aviator verify \
   --repo acme/web \
   --intent "Gate the new banner behind the beta flag" \
   --criteria-file /path/to/criteria.txt \
-  --working-branch feature/banner \
-  --spec /path/to/spec.md
+  --working-branch feature/banner
 ```
-
-**Once per PR** — never one submission covering a stack, never a second for a branch that already has a session.
 
 Output, first two lines stable and more may follow:
 
@@ -170,7 +143,7 @@ Output, first two lines stable and more may follow:
   Criteria: 4
 ```
 
-Parse the URL and the `r/<n>` ID (older CLI versions print `Runbook #<n>` there; the URL carries the same number either way). The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the branch's canonical **review URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works).
+Parse the review URL; its number is the `r/<n>` ID. The URL's host is whatever app the backend is configured with — don't expect it to match `AVIATOR_API_HOST`. That URL is the branch's canonical **review URL**, and `r/<n>` is the ID form every follow-up takes: `aviator show r/42`, `aviator results r/42`, `aviator edit r/42` (a bare number or the full URL also works).
 
 ### Errors
 
@@ -178,7 +151,7 @@ Parse the URL and the `r/<n>` ID (older CLI versions print `Runbook #<n>` there;
 - **Repository not found** — suggest connecting it in the Aviator dashboard under GitHub settings.
 - **Verify not enabled** (403 `verify-not-enabled`) — Verify isn't turned on for this account. Tell the user and stop; don't retry.
 
-## Step 7: Return the link and put it in the PR body
+## Step 6: Return the link and put it in the PR body
 
 Give the user each session's review URL, branch by branch for a stack, with a brief summary of what was submitted.
 
@@ -200,7 +173,7 @@ The contract, whatever mechanism you reach for:
 
 Untouched: PRs that pre-date this session, and anyone else's PRs. This applies only to PRs implementing *this* submission's work in *this* session.
 
-## Step 8: Keep the criteria fresh
+## Step 7: Keep the criteria fresh
 
 AC are a living contract. As commits land, the code drifts from what the user signed off on — new behavior, shifted scope, an edge case handled differently. **Stale AC verify the wrong thing.**
 
@@ -215,14 +188,14 @@ After any meaningful change on a branch, pushed or still local (new behavior, a 
 
 Work reparented between branches in a stack usually means **two** sessions need editing.
 
-Never submit `aviator verify` again to refresh AC, since that creates a second session. Use `aviator edit`. An edit doesn't start a run (Step 9).
+Never submit `aviator verify` again to refresh AC, since that creates a second session. Use `aviator edit`. An edit doesn't start a run (Step 8).
 
-## Step 9: Working with results
+## Step 8: Working with results
 
 Two rules cover everything after submission:
 
 - **Look, don't predict.** After anything that touches the review (an edit, a dismiss, a run), read `aviator results r/<n> --json` and report what it says. Some changes update the result on their own, like a waiver or a removed criterion re-scoring without a run, and others don't, so read the result rather than assume. Its commit is the code the verdicts describe; read them against it, since a later push may already address a failure. A push starts no run: Verify runs on its own when the PR is marked ready for review, approved, and queued, so a result behind the PR's head is the normal state between those.
-- **You propose, the user decides** anything that changes what gets verified or spends a run: editing or removing criteria, waiving invariants, regenerating scenarios, starting a run. A run re-plans, re-collects and re-judges every criterion, so it's expensive, and the next automatic run already picks up a fix, so a manual one is only for when the user wants the answer sooner. When the user asks for a run, push first, since a run verifies the pushed head; if neither the commit nor the criteria changed since the last run, add `--force`, or you get that run back. Regenerating scenarios happens on the review page, so give the user the review URL and the feedback to enter. With no user present, nobody can decide: report the verdicts and proposals and change nothing.
+- **You propose, the user decides** anything that changes what gets verified or spends a run: editing or removing criteria, waiving invariants, regenerating scenarios, starting a run. A run re-plans, re-collects and re-judges every criterion, so it's expensive, and the next automatic run already picks up a fix, so a manual one is only for when the user wants the answer sooner. When the user asks for a run, push first, since a run verifies the pushed head, then start it with `aviator verify r/<n>`; if neither the commit nor the criteria changed since the last run, add `--force`, or you get that run back. Regenerating scenarios happens on the review page, so give the user the review URL and the feedback to enter. With no user present, nobody can decide: report the verdicts and proposals and change nothing.
 
 When a result has verdicts that aren't a pass, bring them to the user together, with one proposal each: fix the code, change the criterion, waive an invariant, or leave it. For a criterion change, say whether it narrows scope (the diff can't affect the claim, the first test in [the rulebook](references/acceptance-criteria.md); read it if you haven't this session) or weakens the criterion (the code was meant to meet the claim, even if Verify couldn't check it).
 

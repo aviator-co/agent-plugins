@@ -72,22 +72,22 @@ run `av pr --all` to create PRs for the entire stack.
 
 ### aviator
 
-Submits specs from Claude Code to Aviator — [Runbooks](https://aviator.co/runbooks) and Verify — through the `aviator` CLI, to automate development workflows.
+Submits work from Claude Code to Aviator — [Runbooks](https://aviator.co/runbooks) and Verify — through the `aviator` CLI, to automate development workflows.
 
-**Verify vs Runbooks.** Aviator has two ways to hand a spec off from your Claude session:
+**Verify vs Runbooks.** Aviator has two ways to hand work off from your Claude session:
 
-- **Verify** — *you* write the code and Aviator verifies it against your intent. You submit an intent, a free-form spec of the key decisions, and acceptance criteria; Aviator checks the PR you open against those criteria.
+- **Verify** — *you* write the code and Aviator verifies it against your intent. You submit an intent and acceptance criteria; Aviator checks the PR you open against those criteria.
 - **Runbooks** — *Aviator's agent* writes the code from your spec. The spec carries full implementation detail so the runbook can capture and replay the workflow.
 
 **What this plugin does:**
 
-- Guides Claude through writing the intent, spec, and acceptance criteria from your current session context
-- Submits Verify specs and creates runbooks via the `aviator` CLI
+- Guides Claude through writing the intent and acceptance criteria from your current session context, plus the spec for a runbook
+- Submits Verify reviews and creates runbooks via the `aviator` CLI
 - Keeps acceptance criteria fresh as a connected PR evolves
 
 **Usage:**
 
-- `/verify-submit` — submit a Verify spec (intent + acceptance criteria) for code you're writing yourself.
+- `/verify-submit` — submit intent and acceptance criteria to Verify for code you're writing yourself.
 - `/create-runbook` — have Aviator's agent write the code from a spec with provided implementation detail.
 
 **Requirements:**
