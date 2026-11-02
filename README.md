@@ -1,169 +1,77 @@
-# Aviator Plugins for coding agents
+# Aviator agent plugins
 
-Agent plugins from [Aviator](https://aviator.co).
+Skills that teach coding agents to work with [Aviator](https://aviator.co): stacked pull requests with the `av` CLI, and Verify and Runbooks with the `aviator` CLI. The skills follow the [Agent Skills](https://agentskills.io) format and are packaged as Claude Code plugins.
 
 ## Plugins
 
-### av-cli
+| Plugin | Skill | Ask for things like |
+| --- | --- | --- |
+| [aviator](aviator/README.md) | `verify-submit` | "submit this to Verify", "write acceptance criteria for this PR", "why did Verify fail?" |
+| | `create-runbook` | "have Aviator's agent build this" |
+| [av-cli](av-cli/README.md) | `av-cli` | "create PRs for my stack", "sync my branches" |
 
-Teaches Claude code or other coding agents how to use the [Aviator CLI](https://github.com/aviator-co/av) (`av`) for stacked PR workflows.
+## Prerequisites
 
-**What is av?** The Aviator CLI is a command-line tool for managing stacked pull requests on GitHub. Stacked PRs let you break large features into small, reviewable chunks while maintaining dependencies between them. av automates the tedious parts: rebasing child branches when parents change, setting correct PR bases, and keeping everything in sync.
+The skills work by running CLIs on your machine, so they need an agent that can run shell commands there, such as Claude Code.
 
-**What this plugin does:**
-
-- Detects av-initialized repos automatically (checks for `.git/av/av.db`)
-- Uses av commands instead of raw git/gh for stacked PR workflows
-- Guides through common workflows (creating stacks, syncing, handling merges)
-- Handles conflicts with proper `--continue`, `--abort`, `--skip` flags
-- Collaborates on stacks using `av adopt --remote` to work on teammates' branches
-
-**Common use case:** Full-stack feature development with stacked PRs:
-
-```
-main
- └── add-feature-db        (DB schema)
-      └── add-feature-service   (Backend logic)
-           └── add-feature-api       (API endpoints)
-                └── add-feature-ui        (Frontend)
-```
-
-Each layer gets a focused, reviewable PR. When you update the DB schema, `av sync` automatically rebases all dependent branches.
-
-**Usage:**
-
-When you're in an av-initialized repository, the agent will automatically use `av` commands for branch and PR operations. Just ask naturally:
-
-- "Create a new branch for the login feature"
-- "Create PRs for my stack"
-- "Sync my branches"
-- "What does my stack look like?"
-
-Or invoke the skill directly with `/av-cli`.
-
-**Requirements:**
-
-- [av CLI](https://github.com/aviator-co/av) installed (`brew install aviator-co/tap/av`)
-- Repository initialized with `av init`
-- GitHub CLI (`gh`) for authentication, or GitHub PAT configured
-
-**Example interaction:**
-
-```
-User: Create a stack of branches for auth, login, and logout features
-
-Claude: I'll create a stack of three branches for you.
-
-[Creates feature-auth from main]
-[Creates feature-login from feature-auth]
-[Creates feature-logout from feature-login]
-
-Here's your stack:
-  main
-   └── feature-auth
-        └── feature-login
-             └── feature-logout
-
-You can now make changes and commit to each branch. When ready,
-run `av pr --all` to create PRs for the entire stack.
-```
-
----
-
-### aviator
-
-Submits work from Claude Code to Aviator — [Runbooks](https://aviator.co/runbooks) and Verify — through the `aviator` CLI, to automate development workflows.
-
-**Verify vs Runbooks.** Aviator has two ways to hand work off from your Claude session:
-
-- **Verify** — *you* write the code and Aviator verifies it against your intent. You submit an intent and acceptance criteria; Aviator checks the PR you open against those criteria.
-- **Runbooks** — *Aviator's agent* writes the code from your spec. The spec carries full implementation detail so the runbook can capture and replay the workflow.
-
-**What this plugin does:**
-
-- Guides Claude through writing the intent and acceptance criteria from your current session context, plus the spec for a runbook
-- Submits Verify reviews and creates runbooks via the `aviator` CLI
-- Keeps acceptance criteria fresh as a connected PR evolves
-
-**Usage:**
-
-- `/verify-submit` — submit intent and acceptance criteria to Verify for code you're writing yourself.
-- `/create-runbook` — have Aviator's agent write the code from a spec with provided implementation detail.
-
-**Requirements:**
-
-- An Aviator account at https://app.aviator.co
-- Repository connected to Aviator
-- The `aviator` CLI installed (`brew trust aviator-co/tap && brew install aviator-co/tap/aviator`, where `brew trust` is required on Homebrew 6+) and signed in with `aviator login`
-
-**Self-hosted / On-prem:** The CLI talks to `https://api.aviator.co` by default. To point it at a self-hosted instance, set `AVIATOR_API_HOST` (or `apiHost` in `~/.config/aviator/config.yaml`):
+Install the CLI for each plugin you use:
 
 ```bash
-export AVIATOR_API_HOST=https://aviator.your-company.com
+brew trust aviator-co/tap            # needed on Homebrew 6 and later
+brew install aviator-co/tap/aviator  # for the aviator plugin
+brew install aviator-co/tap/av       # for the av-cli plugin
 ```
 
-## Installation
+Then set them up:
 
-### From Marketplace (Recommended)
+- **aviator:** run `aviator login`, connect GitHub and your repository to Aviator, and run `aviator init` to set up the [agent hooks](https://docs.aviator.co/verify/how-to-guides/set-up-agent-hooks) that prompt your agent to use verify-submit. [Setting up your machine](https://docs.aviator.co/verify/setting-up-your-machine) walks through each step.
+- **av-cli:** run `av init` in your repository, and sign in to GitHub with `gh auth login` or a [personal access token](https://docs.aviator.co/aviator-cli/configuration#github-personal-access-token).
 
-```bash
-# Add the Aviator plugin marketplace
+## Install
+
+### Claude Code
+
+```
 /plugin marketplace add aviator-co/agent-plugins
-
-# Install plugins
-/plugin install av-cli@aviator-plugins
 /plugin install aviator@aviator-plugins
+/plugin install av-cli@aviator-plugins
 ```
 
-### Manual Installation
+To load a local checkout for one session instead:
 
 ```bash
-# Clone the repository
 git clone https://github.com/aviator-co/agent-plugins.git
-
-# Use with Claude Code
-claude --plugin-dir /path/to/agent-plugins
+claude --plugin-dir ./agent-plugins
 ```
 
-## Structure
+### Codex
 
-Both plugins ship their behavior as [Agent Skills](https://agentskills.io) — a folder per skill, each with a `SKILL.md` and any supporting reference files it needs:
+verify-submit also works in Codex. Install the `aviator/skills/verify-submit` folder as a [Codex skill](https://developers.openai.com/codex/skills/), set up the hooks with `aviator init --agents codex`, then run `/hooks` in Codex and trust the Aviator hook. Nothing fires until you do.
 
-```
-aviator/skills/
-├── verify-submit/    SKILL.md + references/acceptance-criteria.md
-└── create-runbook/   SKILL.md + references/acceptance-criteria.md
+### Other agents
 
-av-cli/skills/
-└── av-cli/           SKILL.md + reference.md + examples.md
-```
+The skills themselves are plain Agent Skills folders, under `aviator/skills/` and `av-cli/skills/`. Agents that read that format can load a skill folder directly.
 
-Each skill is invocable by name (`/verify-submit`) and self-contained, so a skill folder carries everything it needs.
+## Learn more
 
-## Learn More
+- [Verify docs](https://docs.aviator.co/verify), including [setting up your machine](https://docs.aviator.co/verify/setting-up-your-machine), [agent hooks](https://docs.aviator.co/verify/how-to-guides/set-up-agent-hooks), and the [`aviator` CLI reference](https://docs.aviator.co/verify/reference/cli)
+- [Runbooks docs](https://docs.aviator.co/runbooks)
+- [av docs](https://docs.aviator.co/aviator-cli) and [repository](https://github.com/aviator-co/av)
 
-- [Aviator](https://aviator.co)
-- [Aviator Runbooks](https://aviator.co/runbooks)
-- [Aviator CLI Documentation](https://docs.aviator.co/aviator-cli)
-- [Stacked PRs Guide](https://docs.aviator.co/aviator-cli/concepts/stacked-prs)
-- [av GitHub Repository](https://github.com/aviator-co/av)
+## Maintaining
 
-## Versioning and Cache
+Bump `version` in a plugin's `.claude-plugin/plugin.json` with every change to that plugin. Installed copies stay on the version they have until that string changes.
 
-Maintainers should bump the version in `.claude-plugin/marketplace.json` when updating plugin content, to trigger cache invalidation for users.
-
-If a user isn't seeing the latest plugin version after updating, they can manually clear the cache and reinstall:
+If an update doesn't show up for a user, they can clear the plugin's cache and install it again:
 
 ```bash
-rm -rf ~/.claude/plugins/cache/aviator-plugins/av-cli
+rm -rf ~/.claude/plugins/cache/aviator-plugins/<plugin>
 ```
-
-Then run `/plugin install av-cli@aviator-plugins` again.
 
 ## Contributing
 
-Contributions welcome! Please open an issue or PR on [GitHub](https://github.com/aviator-co/agent-plugins).
+Open an issue or PR on [GitHub](https://github.com/aviator-co/agent-plugins).
 
 ## License
 
-MIT - see [LICENSE](LICENSE)
+MIT, see [LICENSE](LICENSE).

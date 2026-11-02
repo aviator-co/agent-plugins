@@ -11,14 +11,12 @@
     {
       "name": "av-cli",
       "source": "./av-cli",
-      "description": "Stacked PR workflows with Aviator CLI",
-      "version": "1.5.4"
+      "description": "Stacked pull requests with Aviator's av CLI: create, sync, and open PRs for a stack of dependent branches"
     },
     {
       "name": "aviator",
       "source": "./aviator",
-      "description": "Verify and Runbooks workflow automation via the aviator CLI",
-      "version": "1.9.0"
+      "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, or hand a spec to Aviator's agent with Runbooks"
     }
   ]
 }
