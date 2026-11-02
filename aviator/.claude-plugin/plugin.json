@@ -1,6 +1,7 @@
 {
   "name": "aviator",
-  "description": "Submit specs to Aviator from Claude Code sessions — Verify (intent + acceptance criteria over your own code) and Runbooks (agentic code generation)",
+  "version": "1.9.0",
+  "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, or hand a spec to Aviator's agent with Runbooks",
   "author": {
     "name": "Aviator",
     "email": "support@aviator.co"

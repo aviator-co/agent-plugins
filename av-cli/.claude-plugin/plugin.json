@@ -1,6 +1,7 @@
 {
   "name": "av-cli",
-  "description": "Claude Code plugin for Aviator CLI stacked PR workflows",
+  "version": "1.5.4",
+  "description": "Stacked pull requests with Aviator's av CLI: create, sync, and open PRs for a stack of dependent branches",
   "author": {
     "name": "Aviator",
     "email": "support@aviator.co"
