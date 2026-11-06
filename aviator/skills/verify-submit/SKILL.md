@@ -1,6 +1,6 @@
 ---
 name: verify-submit
-description: Submit a PR's intent and acceptance criteria to Aviator for Verify, for code the user writes themselves; Aviator verifies each PR against the criteria. Use for "submit a spec", "spec submit", "submit this to Aviator", "send this to Verify", "write acceptance criteria", to refresh the criteria on an existing Verify session as the PR evolves — including stacked work, where each PR gets its own session — or to read Verify results and handle a failing or inconclusive run. The default Aviator submission flow: use this unless the user explicitly asked Aviator's agent to write the code.
+description: "Submit a PR's intent and acceptance criteria to Aviator for Verify, for code the user writes themselves; Aviator verifies each PR against the criteria. Use for \"submit a spec\", \"spec submit\", \"submit this to Aviator\", \"send this to Verify\", \"write acceptance criteria\", to refresh the criteria on an existing Verify session as the PR evolves — including stacked work, where each PR gets its own session — or to read Verify results and handle a failing or inconclusive run. The default Aviator submission flow: use this unless the user explicitly asked Aviator's agent to write the code."
 ---
 
 # Submit for Verify
