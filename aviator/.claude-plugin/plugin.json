@@ -1,6 +1,6 @@
 {
   "name": "aviator",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, or hand a spec to Aviator's agent with Runbooks",
   "author": {
     "name": "Aviator",
