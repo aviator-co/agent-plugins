@@ -11,7 +11,7 @@ Verify checks whether the intent was accomplished, using code scans and behavior
 - **Acceptance Criteria** — the concrete, observable behaviors the change must satisfy.
 - **A Verify session bound to the PR** — through its working branch and the `Review:` line in the PR body.
 
-Decisions made along the way shape the intent and AC; they aren't submitted. To record them on the session for reviewers, the user can run `/aviator:decisions`.
+Decisions made along the way shape the intent and AC. They aren't submitted with them: the user checks them alongside the AC in Step 4, and Step 6 records them on the session.
 
 Run /verify-submit before opening the PR. If the user asks for a PR first, the criteria come first and the PR follows their confirmation.
 
@@ -84,22 +84,23 @@ Bad:
 
 ## Step 4: Review with the user
 
-Show three things and get sign-off:
+Show four things and get one sign-off:
 
 1. **The intent**, for grounding.
 2. **The Acceptance Criteria**, through the loop below.
 3. **Callouts** — what the rulebook says to flag. Only what's genuinely open; don't re-litigate what the session already settled.
+4. **The decisions** from Step 1, as drafts. Load the `decisions` skill and draft them through its step 5, then show them in its preview form. A branch with no session yet is expected here.
 
-The intent, AC and any scenario guidance are everything Verify receives; callouts stay in the conversation.
+The intent, AC and any scenario guidance are everything Verify receives; callouts stay in the conversation, and the decisions go on the session for reviewers.
 
 The AC review loop:
 
 - **Primer on the first showing**, so an unfamiliar user knows what they're reading: *"Acceptance Criteria are the code-anchored behaviors this change must satisfy — each one is verified independently. Are these the right ones?"* Natural wording, first time only.
-- **Multiple PRs: group by PR** — branch, that PR's intent, its criteria, then its callouts. Seeing the split is how the user catches a criterion sitting on the wrong PR.
+- **Multiple PRs: group by PR** — branch, that PR's intent, its criteria, its callouts, then its decisions. Seeing the split is how the user catches a criterion sitting on the wrong PR.
 - **End with one direct question.** *"Anything to add, remove, or tighten?"*
 - **Apply the feedback** — add, remove, tighten, split, or move a criterion to the PR it belongs on. Re-show, call out what changed, ask again.
 - **Repeat until the user explicitly confirms.** "Yes" or "go ahead" is enough. Never submit on silence or an implied yes.
-- **Non-interactive first submission** (no user available): treat the AC as pre-confirmed, and note in your output that confirmation was skipped. This covers the first submission only; later changes need a user (Step 8).
+- **Non-interactive first submission** (no user available): treat the AC as pre-confirmed, and note in your output that confirmation was skipped. Decisions aren't pre-confirmed, so report them unrecorded. This covers the first submission only; later changes need a user (Step 8).
 
 ## Step 5: Submit
 
@@ -175,6 +176,10 @@ The contract, whatever mechanism you reach for:
 - **Confirm the line landed** by reading the body back before telling the user the PR is connected.
 
 Untouched: PRs that pre-date this session, and anyone else's PRs. This applies only to PRs implementing *this* submission's work in *this* session.
+
+### Record the decisions
+
+Last, record the decisions the user confirmed in Step 4 through the `decisions` skill, on each branch's new session. That confirmation covers them, so don't ask again, and the PR doesn't need to be open.
 
 ## Step 7: Keep the criteria fresh
 

@@ -1,6 +1,6 @@
 ---
 name: decisions
-description: "Record the decisions made in this conversation (choices, accepted risks, fixed bugs, answered questions) on each pull request's Verify session, credited to whoever made each call. Use when the user runs /aviator:decisions or asks to record, log, or write down the decisions behind a PR. Only run it when asked, since it writes under the user's name to a record their teammates read."
+description: "Record the decisions made in this conversation (choices, accepted risks, fixed bugs, answered questions) on each pull request's Verify session, credited to whoever made each call. Use when the user runs /aviator:decisions or asks to record, log, or write down the decisions behind a PR, and from verify-submit's review with the user. Don't run it otherwise, since it writes under the user's name to a record their teammates read."
 ---
 
 # Record decisions
