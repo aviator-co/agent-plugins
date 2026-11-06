@@ -47,7 +47,7 @@ Or run a skill directly with `/aviator:verify-submit` or `/aviator:create-runboo
 
 **verify-submit** reads your changes and the decisions made in the session, then drafts an intent (what the change accomplishes and why) and acceptance criteria (observable behaviors it must satisfy). Nothing is submitted until you confirm them. It then opens a Verify session for the PR and puts the session's `Review:` link at the top of the PR description, which is how Verify connects the two. A stack gets one session per PR, each with criteria for that PR's own diff.
 
-As the PR changes, it updates the criteria on the existing session. When a Verify result comes back with failures or inconclusive verdicts, it reads them and proposes one fix for each: change the code, change the criterion, waive an invariant, or leave it. You decide which.
+As the PR changes, it updates the criteria on the existing session. When a Verify result comes back with failures or inconclusive verdicts, it reads them and proposes one fix for each: change the code, change the criterion, waive the criterion or invariant, or leave it. You decide which.
 
 **create-runbook** writes a spec with full implementation detail, talks it through with you, then creates the runbook and puts its `Runbook:` link at the top of the PR description.
 
