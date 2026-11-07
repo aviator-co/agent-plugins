@@ -19,6 +19,7 @@ Agent hooks remind your agent to use verify-submit at the right moments, so you 
 
 - When a session starts, they tell the agent to capture the intent and acceptance criteria before opening a PR.
 - When the agent opens a PR, they add a reminder.
+- When the agent pulls up a PR to review, they point it at that PR's decisions.
 - After a commit or push, they have the agent check the branch's Verify session.
 
 The hooks only add reminders. They never submit anything or block the agent. Set them up from inside your repository with the `aviator` CLI:
@@ -41,6 +42,7 @@ Ask in plain words:
 - "Verify failed on my PR, what's wrong?"
 - "have Aviator's agent build the rate limiter"
 - "record the decisions behind this PR"
+- "what's been decided on this PR?"
 
 Or run a skill directly with `/aviator:verify-submit`, `/aviator:create-runbook` or `/aviator:decisions`.
 
@@ -52,7 +54,7 @@ As the PR changes, it updates the criteria on the existing session. When a Verif
 
 **create-runbook** writes a spec with full implementation detail, talks it through with you, then creates the runbook and puts its `Runbook:` link at the top of the PR description.
 
-**decisions** pulls the decisions out of your session (what was chosen and why, the risks accepted, the bugs fixed, the questions answered) and shows you the drafts. Once you confirm, it records them on each PR's Verify session, credited to you or to the agent that made each call, so reviewers can see why the code looks the way it does. Anyone with access to the session can read them, and they can't be deleted. verify-submit shows you the drafts alongside the acceptance criteria, and you can run it yourself after more work.
+**decisions** pulls the decisions out of your session (what was chosen and why, the risks accepted, the bugs fixed, the questions answered) and shows you the drafts. Once you confirm, it records them on each PR's Verify session, credited to you or to the agent that made each call, so reviewers can see why the code looks the way it does. Anyone with access to the session can read them, and they can't be deleted. verify-submit shows you the drafts alongside the acceptance criteria, and you can run it yourself after more work. When you review someone else's PR, it reads what's already been decided, so your agent checks those calls against the code instead of raising them again.
 
 ## Verify or Runbooks?
 
