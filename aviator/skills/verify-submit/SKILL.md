@@ -11,7 +11,7 @@ Verify checks whether the intent was accomplished, using code scans and behavior
 - **Acceptance Criteria** — the concrete, observable behaviors the change must satisfy.
 - **A Verify session bound to the PR** — through its working branch and the `Review:` line in the PR body.
 
-Decisions made along the way shape the intent and AC; they aren't submitted.
+Decisions made along the way shape the intent and AC; they aren't submitted. To record them on the session for reviewers, the user can run `/aviator:decisions`.
 
 Run /verify-submit before opening the PR. If the user asks for a PR first, the criteria come first and the PR follows their confirmation.
 
