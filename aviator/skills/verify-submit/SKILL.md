@@ -59,9 +59,10 @@ Stacked Verify puts a whole stack in **one** session that runs once on the top P
 1. Open PR1, then submit it with `aviator verify --draft --working-branch <pr1-branch> ...` (Step 5). A draft holds PRs and AC but never runs.
 2. For each PR stacked on top: read the session's AC and version with `aviator show r/<n> --json`. Rewrite the **full** AC list for every PR so far, fixing conflicts, duplicates and refinements against the new diff. Then run `aviator verify add r/<n> --pr <number> --criteria-file <all-ac-file> --base-version <version>`. If the add is refused because the AC changed, read them again and retry.
 3. Show the user the PRs and the AC. Once they agree to the grouping, run `aviator verify confirm r/<n>`. That starts the first run. No PRs can be added after this.
-4. When a member PR is closed or the stack is split, run `aviator verify regroup r/<n> --group <file> [--group <file>]`, with one JSON file per new session: `{"pr_numbers": [...], "intent": "...", "criteria": [...], "decision_ids": [...]}`. Each group gets the full AC for its PRs.
+4. When a member PR is closed without merging, Aviator drops it and the session stays. Restack the PRs above it, then rewrite the AC and intent for the PRs left with `aviator edit` (below).
+5. Regroup only splits a stack into separate reviews: `aviator verify regroup r/<n> --group <file> --group <file>` (two or more), with one JSON file per new session: `{"pr_numbers": [...], "intent": "...", "criteria": [...], "decision_ids": [...]}`. Each group gets the full AC for its PRs.
 
-Every PR in the stack gets the same `Review:` line (Step 6).
+Create every PR in the stack with `Review: <full review URL>` as its first body line (Step 6). A bare `r/<n>` doesn't link. Linking through the body adds no AC and `add` keeps the old intent, so after a PR links that way, run `aviator edit r/<n> --criteria-file <full AC list> --expected-version <version> --intent "<intent covering all PRs>"`.
 
 ### Which branches already have a session
 
