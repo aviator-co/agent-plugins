@@ -40,7 +40,7 @@ Draw everything below from what the code does and those decisions, cross-checked
 
 ## Step 2: Determine the units of verification
 
-**One Verify session per PR.** A session binds to exactly one PR, and resubmitting a branch that already has a session is not supported. **N PRs means N `aviator verify` invocations.** Settle the count before writing anything.
+**By default, one Verify session per PR.** A session binds to exactly one PR, and resubmitting a branch that already has a session is not supported. **N PRs means N `aviator verify` invocations.** Settle the count before writing anything.
 
 Detect the shape of the work, not the tool — people stack with `av`, Graphite, `gh`, or plain `git`:
 
@@ -53,6 +53,17 @@ Tool markers (`.git/av/av.db`, a Graphite config) corroborate, never decide — 
 Then, per PR: its own invocation and `--working-branch`; its own **intent**, what *that* PR contributes rather than the session's whole story retold; its own **AC**, scoped to its diff **against its parent** (a criterion the parent PR already satisfies doesn't belong on the child); its own `Review:` line.
 
 `--target-branch` stays at the repo default even mid-stack: Verify deliberately diffs a stacked PR against its eventual merge target, not its immediate parent. Scope the AC to the PR's own contribution; leave the target alone.
+
+### Stacked mode (allowlist only)
+
+Stacked Verify puts a whole stack in **one** session that runs once on the top PR. It's behind an allowlist of Aviator users: use it only when the user says they're on it, and if `--draft` is refused, fall back to one session per PR as above. Without it, a stack of N PRs is still N submissions.
+
+1. Open PR1, then submit it with `aviator verify --draft --working-branch <pr1-branch> ...` (Step 5). A draft holds PRs and AC but never runs.
+2. For each PR stacked on top: read the session's AC and version with `aviator show r/<n> --json`. Rewrite the **full** AC list for every PR so far, fixing conflicts, duplicates and refinements against the new diff. Then run `aviator verify add r/<n> --pr <number> --criteria-file <all-ac-file> --base-version <version>`. If the add is refused because the AC changed, read them again and retry.
+3. Show the user the PRs and the AC. Once they agree to the grouping, run `aviator verify confirm r/<n>`. That starts the first run. No PRs can be added after this.
+4. When a member PR is closed or the stack is split, run `aviator verify regroup r/<n> --group <file> [--group <file>]`, with one JSON file per new session: `{"pr_numbers": [...], "intent": "...", "criteria": [...], "decision_ids": [...]}`. Each group gets the full AC for its PRs.
+
+Every PR in the stack gets the same `Review:` line (Step 6).
 
 ### Which branches already have a session
 
