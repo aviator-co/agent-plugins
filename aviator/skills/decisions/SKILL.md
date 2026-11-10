@@ -39,7 +39,7 @@ Decisions tell you what the author and earlier reviewers already weighed, so you
 - **Open, raised by the author:** a question for reviewers. Answer it.
 - **Open, raised by a review:** a question for the author. Leave it.
 
-Tell the user about the open ones and the ones you'd dispute, not the rest. To respond on the record, comment on the existing decision, or reopen it if you've overturned it, and raise a new one only for something nobody has weighed yet. All of that goes on this session, through the preview in step 6.
+Tell the user about the open ones and the ones you'd dispute, not the rest. To respond on the record, comment on the existing decision, or reopen it if you've overturned it, and raise a new one only for a concern the author should settle on the record, left open and titled as the concern, not the fix you'd make. A fix you're asking for belongs in a review comment, and concerns you weighed and dropped aren't recorded: in a review, the record is the author's, so skip distill (step 3). All of that goes on this session, through the preview in step 6.
 
 ## 2. Find the sessions
 
