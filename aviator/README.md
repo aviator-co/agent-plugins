@@ -52,7 +52,7 @@ As the PR changes, it updates the criteria on the existing session. When a Verif
 
 **create-runbook** writes a spec with full implementation detail, talks it through with you, then creates the runbook and puts its `Runbook:` link at the top of the PR description.
 
-**decisions** pulls the decisions out of your session (what was chosen and why, the risks accepted, the bugs fixed, the questions answered) and shows you the drafts. Once you confirm, it records them on each PR's Verify session, credited to you or to the agent that made each call, so reviewers can see why the code looks the way it does. Anyone with access to the session can read them, and they can't be deleted.
+**decisions** pulls the decisions out of your session (what was chosen and why, the risks accepted, the bugs fixed, the questions answered) and shows you the drafts. Once you confirm, it records them on each PR's Verify session, credited to you or to the agent that made each call, so reviewers can see why the code looks the way it does. Anyone with access to the session can read them, and they can't be deleted. verify-submit shows you the drafts alongside the acceptance criteria, and you can run it yourself after more work.
 
 ## Verify or Runbooks?
 
