@@ -1,7 +1,7 @@
 {
   "name": "aviator",
-  "version": "1.10.3",
-  "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, record and review the decisions behind it, or hand a spec to Aviator's agent with Runbooks",
+  "version": "1.11.0",
+  "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, record and review the decisions behind it",
   "author": {
     "name": "Aviator",
     "email": "support@aviator.co"
@@ -9,5 +9,5 @@
   "homepage": "https://aviator.co",
   "repository": "https://github.com/aviator-co/agent-plugins",
   "license": "MIT",
-  "keywords": ["verify", "runbooks", "aviator", "spec-driven", "behavior-driven-development"]
+  "keywords": ["verify", "review", "aviator", "spec-driven", "behavior-driven-development"]
 }

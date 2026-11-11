@@ -1,6 +1,6 @@
 ---
 name: verify-submit
-description: "Submit a PR's intent and acceptance criteria to Aviator for Verify, for code the user writes themselves; Aviator verifies each PR against the criteria. Use for \"submit a spec\", \"spec submit\", \"submit this to Aviator\", \"send this to Verify\", \"write acceptance criteria\", to refresh the criteria on an existing Verify session as the PR evolves — including stacked work, where each PR gets its own session — or to read Verify results and handle a failing or inconclusive run. The default Aviator submission flow: use this unless the user explicitly asked Aviator's agent to write the code."
+description: "Submit a PR's intent and acceptance criteria to Aviator for Verify, for code the user writes themselves; Aviator verifies each PR against the criteria. Use for \"submit a spec\", \"spec submit\", \"submit this to Aviator\", \"send this to Verify\", \"write acceptance criteria\", to refresh the criteria on an existing Verify session as the PR evolves — including stacked work, where each PR gets its own session — or to read Verify results and handle a failing or inconclusive run."
 ---
 
 # Submit for Verify
@@ -14,8 +14,6 @@ Verify checks whether the intent was accomplished, using code scans and behavior
 Decisions made along the way shape the intent and AC. They aren't submitted with them: the user checks them alongside the AC in Step 4, and Step 6 records them on the session.
 
 Run /verify-submit before opening the PR. If the user asks for a PR first, the criteria come first and the PR follows their confirmation.
-
-> Want Aviator's agent to write the code instead? That's `/create-runbook`, and only if the user asked for that hand-off.
 
 ## Arguments
 
@@ -33,8 +31,8 @@ The code is ground truth. Before generating anything, identify:
 
 - **Working branch(es)** — where the in-flight work lives (usually the current branch; a stack has one per PR, settled in Step 2). Each becomes a `--working-branch`.
 - **The repository** in `owner/repo` form — derive it with the Step 5 procedure, not by reading `origin`.
-- **The current changes, end to end** — the diff plus the modified files in full, not just the hunks. Know what behavior each change introduces, what invariants it preserves, what it exposes, what failure modes it handles, what it replaces. For a stacked branch, read its diff **against its parent** — that's what its PR contributes.
-- **The decisions** the session settled, as the Sources section of [references/acceptance-criteria.md](references/acceptance-criteria.md) defines them. In a stack, each belongs to the PR whose diff carries it.
+- **The current changes** — the diff, and enough of the code around it to know what it does. For a stacked branch, read its diff **against its parent** — that's what its PR contributes.
+- **The decisions** the session settled, as the Decisions section of [references/acceptance-criteria.md](references/acceptance-criteria.md) defines them. In a stack, each belongs to the PR whose diff carries it.
 
 Draw everything below from what the code does and those decisions, cross-checked against `$ARGUMENTS` and any spec or plan already in the session. Never from imagination.
 
@@ -78,9 +76,9 @@ Good:
 Bad:
 > Add `RateLimiter` middleware in `api/middleware.py`, wire a Redis token bucket keyed by client ID, decrement in `before_request`...
 
-### Acceptance Criteria are the primary output
+### The Acceptance Criteria
 
-**Blocking: read [references/acceptance-criteria.md](references/acceptance-criteria.md) before writing or reviewing any AC**, and apply it in full. Soft target of **3–6 per PR**; the rulebook governs what earns a slot.
+Read [references/acceptance-criteria.md](references/acceptance-criteria.md) before writing or reviewing any AC, and follow it.
 
 ## Step 4: Review with the user
 
@@ -185,11 +183,11 @@ Last, record the decisions the user confirmed in Step 4 through the `decisions` 
 
 AC are a living contract. As commits land, the code drifts from what the user signed off on — new behavior, shifted scope, an edge case handled differently. **Stale AC verify the wrong thing.**
 
-After any meaningful change on a branch, pushed or still local (new behavior, a changed contract, scope added or dropped — not a typo fix):
+After any meaningful change on a branch, pushed or still local (a changed contract, scope added or dropped, a criterion the code no longer meets — not a typo fix or a new detail the criteria never needed):
 
 1. **Find the session that owns that branch**, with `aviator sessions --repo <owner/repo> --branch <branch> --json` if this conversation didn't submit it. Editing the wrong session in a stack overwrites the wrong criteria list, silently.
 2. **Read the current version:** `version` (an int), from that lookup or `aviator results r/<n> --json`.
-3. **Compare the AC against that branch's current diff** — its own contribution, against its parent. Code doing something the AC don't cover, or an AC no longer matching the code, means stale.
+3. **Compare the AC against that branch's current diff** — its own contribution, against its parent. An AC no longer matching the code, or an intent or scope the AC no longer reflect, means stale. Code doing something the AC don't mention isn't stale on its own.
 4. **Replace them:** `aviator edit r/<n> --expected-version <version> --criteria-file <path>`. The edit **replaces the entire list**, so the file must hold the COMPLETE new list including unchanged items, in order — add, update, remove and reorder in one atomic edit. On a 409 stale-version error someone else changed the session: re-read the version and retry, since a stale edit writes nothing.
 5. **Hold the Step 3 quality bar**, and confirm the new list with the user before editing.
 6. **Refresh the intent too when the scope shifted:** `aviator edit r/<n> --intent "..."`. An intent edit needs no version and can go in the same call as the criteria.
