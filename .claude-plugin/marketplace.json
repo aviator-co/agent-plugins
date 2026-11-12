@@ -16,7 +16,7 @@
     {
       "name": "aviator",
       "source": "./aviator",
-      "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, record and review the decisions behind it, or hand a spec to Aviator's agent with Runbooks"
+      "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, record and review the decisions behind it"
     }
   ]
 }

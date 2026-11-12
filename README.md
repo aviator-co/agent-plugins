@@ -1,13 +1,12 @@
 # Aviator agent plugins
 
-Skills that teach coding agents to work with [Aviator](https://aviator.co): stacked pull requests with the `av` CLI, and Verify and Runbooks with the `aviator` CLI. The skills follow the [Agent Skills](https://agentskills.io) format and are packaged as Claude Code plugins.
+Skills that teach coding agents to work with [Aviator](https://aviator.co): stacked pull requests with the `av` CLI, and Verify with the `aviator` CLI. The skills follow the [Agent Skills](https://agentskills.io) format and are packaged as Claude Code plugins.
 
 ## Plugins
 
 | Plugin | Skill | Ask for things like |
 | --- | --- | --- |
 | [aviator](aviator/README.md) | `verify-submit` | "submit this to Verify", "write acceptance criteria for this PR", "why did Verify fail?" |
-| | `create-runbook` | "have Aviator's agent build this" |
 | | `decisions` | "record the decisions behind this PR", "what's been decided on this PR?" |
 | [av-cli](av-cli/README.md) | `av-cli` | "create PRs for my stack", "sync my branches" |
 
@@ -56,7 +55,6 @@ The skills themselves are plain Agent Skills folders, under `aviator/skills/` an
 ## Learn more
 
 - [Verify docs](https://docs.aviator.co/verify), including [setting up your machine](https://docs.aviator.co/verify/setting-up-your-machine), [agent hooks](https://docs.aviator.co/verify/how-to-guides/set-up-agent-hooks), and the [`aviator` CLI reference](https://docs.aviator.co/verify/reference/cli)
-- [Runbooks docs](https://docs.aviator.co/runbooks)
 - [av docs](https://docs.aviator.co/aviator-cli) and [repository](https://github.com/aviator-co/av)
 
 ## Maintaining
