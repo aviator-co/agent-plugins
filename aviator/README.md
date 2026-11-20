@@ -42,8 +42,9 @@ Ask in plain words:
 - "Verify failed on my PR, what's wrong?"
 - "record the decisions behind this PR"
 - "what's been decided on this PR?"
+- "we don't have a preview for this, I'll run it locally and submit the evidence"
 
-Or run a skill directly with `/aviator:verify-submit` or `/aviator:decisions`.
+Or run a skill directly with `/aviator:verify-submit`, `/aviator:decisions` or `/aviator:verify-evidence`.
 
 ## What you get
 
@@ -52,6 +53,8 @@ Or run a skill directly with `/aviator:verify-submit` or `/aviator:decisions`.
 As the PR changes, it updates the criteria on the existing session. When a Verify result comes back with failures or inconclusive verdicts, it reads them and proposes one fix for each: change the code, change the criterion, waive the criterion or invariant, or leave it. You decide which.
 
 **decisions** pulls the decisions out of your session (what was chosen and why, the risks accepted, the bugs fixed, the questions answered) and shows you the drafts. Once you confirm, it records them on each PR's Verify session, credited to you or to the agent that made each call, so reviewers can see why the code looks the way it does. Anyone with access to the session can read them, and they can't be deleted. verify-submit shows you the drafts alongside the acceptance criteria, and you can run it yourself after more work. When you review someone else's PR, it reads what's already been decided, so your agent checks those calls against the code instead of raising them again.
+
+**verify-evidence** is for changes Verify can't run in a preview. It works out what would prove each criterion, runs the change the way your repo documents, and captures what each step showed: screenshots, page markup, console output, API responses. It asks before running anything that creates data or reaches past your local app, and summarizes what it'll submit before anything uploads. Verify judges the criteria from that evidence, and after each new commit it waits for evidence from that commit. Every file is a real capture from the run, never written or edited, since your reviewers see it as what the change did.
 
 ## Requirements
 
@@ -79,8 +82,8 @@ export AVIATOR_API_HOST=https://aviator.your-company.com
 
 The plugin contains only skills: no hooks, MCP servers, or scripts. The agent hooks above are separate, written into your agent's settings by `aviator init`. The skills have your agent run `aviator`, `gh`, and `git`, the CLIs you installed and signed in to yourself.
 
-- **Locally:** reads your branch's diff and changed files, and can write the criteria list to a file for the `aviator` CLI to read.
-- **To Aviator** (`api.aviator.co`, or your `AVIATOR_API_HOST`), through the `aviator` CLI: the intent, the acceptance criteria, the decisions you confirm (their text, plus the model, harness and skills behind the agent's calls), and the repository and branches they apply to. It reads back session status and Verify results.
+- **Locally:** reads your branch's diff and changed files, and can write the criteria list to a file for the `aviator` CLI to read. verify-evidence also runs your app the way your repo documents and saves its captures under `/tmp`.
+- **To Aviator** (`api.aviator.co`, or your `AVIATOR_API_HOST`), through the `aviator` CLI: the intent, the acceptance criteria, the decisions you confirm (their text, plus the model, harness and skills behind the agent's calls), the evidence files and manifest you approve, and the repository and branches they apply to. It reads back session status and Verify results.
 - **To GitHub**, through `gh` or `av`: reads pull request bases and descriptions, and adds the `Review:` line to the top of the description of the PR for this work.
 
 The CLIs use the logins you gave them. The plugin never reads or passes on tokens, and sends nothing anywhere else.
