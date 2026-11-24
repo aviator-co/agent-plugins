@@ -8,6 +8,7 @@ Skills that teach coding agents to work with [Aviator](https://aviator.co): stac
 | --- | --- | --- |
 | [aviator](aviator/README.md) | `verify-submit` | "submit this to Verify", "write acceptance criteria for this PR", "why did Verify fail?" |
 | | `decisions` | "record the decisions behind this PR", "what's been decided on this PR?" |
+| | `verify-evidence` | "I'll run it locally, submit the evidence to Verify" |
 | [av-cli](av-cli/README.md) | `av-cli` | "create PRs for my stack", "sync my branches" |
 
 ## Prerequisites
