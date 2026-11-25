@@ -1,6 +1,6 @@
 {
   "name": "aviator",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "Have Aviator Verify check each pull request against the intent and acceptance criteria from your session, record and review the decisions behind it",
   "author": {
     "name": "Aviator",
