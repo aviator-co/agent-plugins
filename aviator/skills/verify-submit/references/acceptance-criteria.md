@@ -18,7 +18,7 @@ A criterion stays only if:
 
 ## Decisions
 
-The decisions are what the session settled: choices and their reasons, scope cuts, accepted risks, behavior to leave unchanged. They're mostly in the conversation, not the diff.
+The decisions are what the session settled about the code: choices and their reasons, accepted risks, behavior to leave unchanged. The diff shows where each landed; the conversation says why.
 
 - Gate the outcome a choice produces, not the option picked.
 - Work left for later gets no criterion, and neither does an accepted risk.

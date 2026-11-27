@@ -5,7 +5,7 @@ description: "Read and record a pull request's decisions on its Verify session (
 
 # Decisions
 
-A PR shows what changed. The conversation that produced it knows why: the approaches weighed and dropped, the risks accepted, the questions the user answered, the bugs caught along the way. That reasoning dies with the session unless it's written down. This skill distills it into decisions on the PR's Verify session, and reads them back when someone reviews the PR.
+A PR shows what changed. The conversation that produced it often knows why the code is the way it is: the reason one approach beat another, the risks accepted, the bugs caught along the way. That reasoning dies with the session unless it's written down. This skill distills it into decisions on the PR's Verify session, and reads them back when someone reviews the PR.
 
 Decisions have two readers, and neither saw the conversation: a reviewer on the review page, and the agent in Aviator's review chat, which gets each decision's title, summary and resolution but only its latest comments. So those three fields have to make sense without the thread. Compact beats complete: a reviewer should get through the record in a minute.
 
@@ -49,7 +49,12 @@ Put each decision on the branch where its code was committed. One that spans sev
 
 ## 3. Distill
 
-Go back through the conversation. A decision is something a reviewer could reasonably ask "why?" about, and that the conversation answered. The diff tells you where a decision landed, never why it was made, so a reason that isn't in the conversation can't be recorded.
+Read the whole conversation and list every call it made, including the alternatives each one beat. Then keep only the calls a reviewer needs. For each, name the part of the diff it's about, and ask whether a reviewer reading that code without the conversation would question it, push back, or misread it. If you can't name the code, or a reviewer would read it fine as it is, drop it. The diff tells you where a decision landed, never why it was made, so a reason that isn't in the conversation can't be recorded.
+
+- A proposal to build more that was cut or deferred isn't a decision, whoever raised it: a feature, a scope item, an option the user turned down while planning. A review asks whether this change is right, not what else it could have built.
+- A concern about the change that was weighed and turned down is a decision even when nothing landed: a hardening step, a fix, or a refactor of code the diff touches. The next reviewer is likely to raise it again.
+- Something the diff leaves out counts only when the code makes a reviewer expect it, like neighboring code that does it.
+- When the session replaced one approach with another, record where it landed. The earlier attempt belongs in that decision's thread, if anywhere.
 
 | What happened in the session | type | outcome |
 |---|---|---|
@@ -59,7 +64,7 @@ Go back through the conversation. A decision is something a reviewer could reaso
 | Found a bug in the change and fixed it | `possible_bug` | `fixed` |
 | Left something for a later PR | any | `follow_up` |
 | Raised a concern that turned out wrong | any | `withdrawn` |
-| Asked a question the user answered | `question` | `decided` |
+| Settled a question about how the code behaves | `question` | `decided` |
 | Still unresolved | any | left open |
 
 Almost every decision gets an outcome, since the conversation reached it. Leave one open only for a question the conversation raised and never answered, not because settling it takes effort to write. A `follow_up` is different: it settles a decision to do the work later, while an open decision is one nobody has made yet.
@@ -67,12 +72,11 @@ Almost every decision gets an outcome, since the conversation reached it. Leave 
 Leave out:
 
 - What the diff already says plainly. This is not a changelog.
-- Dead ends that left no trace in the code and that no reviewer would suggest.
 - Typos, lint fixes, and other mechanical work.
 - A `fixed` bug, unless a reviewer would otherwise wonder about the code that fixed it or the same mistake is easy to make again.
 - Secrets, credentials, personal data, customer names, and raw production output. Say what an investigation showed, not the data. Write nothing you wouldn't paste in a PR comment.
 
-Most conversations produce a handful of decisions, and a dozen means you're narrating, so merge those that turned on the same reason. None is a fine result: a fresh session or purely mechanical work has nothing to record, so tell the user that and stop. If the start of the conversation was summarized away, work from what remains and say that earlier decisions may be missing.
+Many PRs have one or two decisions, and a dozen means you're narrating, so merge those that turned on the same reason. None is a fine result: a fresh session or purely mechanical work has nothing to record, so tell the user that and stop. If the start of the conversation was summarized away, work from what remains and say that earlier decisions may be missing.
 
 ### Check what's recorded
 
